@@ -1,13 +1,13 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TNTPrimed;
 
@@ -20,7 +20,7 @@ public class Commandnuke extends EssentialsCommand
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws NoSuchFieldException, NotEnoughArgumentsException
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws NoSuchFieldException, NotEnoughArgumentsException
 	{
 		List<Player> targets;
 		if (args.length > 0)
@@ -44,7 +44,7 @@ public class Commandnuke extends EssentialsCommand
 			{
 				continue;
 			}
-			player.sendMessage(_("nuke"));
+			player.sendMessage(tl("nuke"));
 			final Location loc = player.getLocation();
 			final World world = loc.getWorld();
 			for (int x = -10; x <= 10; x += 5)

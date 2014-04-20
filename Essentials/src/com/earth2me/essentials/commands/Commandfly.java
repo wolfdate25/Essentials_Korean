@@ -1,9 +1,9 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 
 
 public class Commandfly extends EssentialsToggleCommand
@@ -14,7 +14,7 @@ public class Commandfly extends EssentialsToggleCommand
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		toggleOtherPlayers(server, sender, args);
 	}
@@ -27,42 +27,43 @@ public class Commandfly extends EssentialsToggleCommand
 			Boolean toggle = matchToggleArgument(args[0]);
 			if (toggle == null && user.isAuthorized(othersPermission))
 			{
-				toggleOtherPlayers(server, user.getBase(), args);
+				toggleOtherPlayers(server, user.getSource(), args);
 			}
 			else
 			{
-				togglePlayer(user.getBase(), user, toggle);
+				togglePlayer(user.getSource(), user, toggle);
 			}
 		}
 		else if (args.length == 2 && user.isAuthorized(othersPermission))
 		{
-			toggleOtherPlayers(server, user.getBase(), args);
+			toggleOtherPlayers(server, user.getSource(), args);
 		}
 		else
 		{
-			togglePlayer(user.getBase(), user, null);
+			togglePlayer(user.getSource(), user, null);
 		}
 	}
 
 	@Override
-	void togglePlayer(CommandSender sender, User user, Boolean enabled)
+	void togglePlayer(CommandSource sender, User user, Boolean enabled)
 	{
 		if (enabled == null)
 		{
-			enabled = !user.getAllowFlight();
+			enabled = !user.getBase().getAllowFlight();
 		}
 
-		user.setAllowFlight(enabled);
-
-		if (!user.getAllowFlight())
+		user.getBase().setFallDistance(0f);
+		user.getBase().setAllowFlight(enabled);
+		
+		if (!user.getBase().getAllowFlight())
 		{
-			user.setFlying(false);
+			user.getBase().setFlying(false);
 		}
 
-		user.sendMessage(_("flyMode", _(enabled ? "enabled" : "disabled"), user.getDisplayName()));
-		if (!sender.equals(user.getBase()))
+		user.sendMessage(tl("flyMode", tl(enabled ? "enabled" : "disabled"), user.getDisplayName()));
+		if (!sender.isPlayer() || !sender.getPlayer().equals(user.getBase()))
 		{
-			sender.sendMessage(_("flyMode", _(enabled ? "enabled" : "disabled"), user.getDisplayName()));
+			sender.sendMessage(tl("flyMode", tl(enabled ? "enabled" : "disabled"), user.getDisplayName()));
 		}
 	}
 }

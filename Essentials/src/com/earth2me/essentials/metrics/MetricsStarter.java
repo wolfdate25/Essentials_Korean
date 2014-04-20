@@ -1,6 +1,5 @@
 package com.earth2me.essentials.metrics;
 
-import net.ess3.api.IEssentials;
 import com.earth2me.essentials.metrics.Metrics.Graph;
 import com.earth2me.essentials.metrics.Metrics.Plotter;
 import com.earth2me.essentials.register.payment.Method;
@@ -8,6 +7,7 @@ import com.earth2me.essentials.register.payment.methods.VaultEco;
 import com.earth2me.essentials.signs.EssentialsSign;
 import java.util.Locale;
 import java.util.logging.Level;
+import net.ess3.api.IEssentials;
 import org.bukkit.configuration.ConfigurationSection;
 
 
@@ -47,7 +47,7 @@ public class MetricsStarter implements Runnable
 				else
 				{
 					ess.getLogger().info("This plugin collects minimal statistic data and sends it to http://metrics.essentials3.net.");
-					ess.getLogger().info("You can opt out by running /essentials opt-out");
+					ess.getLogger().info("You can opt out, disabling metrics for all plugins, by running /essentials opt-out");
 					ess.getLogger().info("This will start 5 minutes after the first admin/op joins.");
 					start = false;
 				}

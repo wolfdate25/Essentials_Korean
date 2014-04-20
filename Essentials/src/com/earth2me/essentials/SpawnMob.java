@@ -1,20 +1,19 @@
 package com.earth2me.essentials;
 
-import static com.earth2me.essentials.I18n._;
-import net.ess3.api.IEssentials;
-import com.earth2me.essentials.utils.StringUtil;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.Mob.MobException;
 import com.earth2me.essentials.utils.LocationUtil;
+import com.earth2me.essentials.utils.StringUtil;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import net.ess3.api.IEssentials;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -35,7 +34,7 @@ public class SpawnMob
 		}
 		if (availableList.isEmpty())
 		{
-			availableList.add(_("none"));
+			availableList.add(tl("none"));
 		}
 		return StringUtil.joinList(availableList);
 	}
@@ -89,19 +88,19 @@ public class SpawnMob
 		final Block block = LocationUtil.getTarget(user.getBase()).getBlock();
 		if (block == null)
 		{
-			throw new Exception(_("unableToSpawnMob"));
+			throw new Exception(tl("unableToSpawnMob"));
 		}
-		spawnmob(ess, server, user.getBase(), user, block.getLocation(), parts, data, mobCount);
+		spawnmob(ess, server, user.getSource(), user, block.getLocation(), parts, data, mobCount);
 	}
 
 	// This method spawns a mob at target, owned by target
-	public static void spawnmob(final IEssentials ess, final Server server, final CommandSender sender, final User target, final List<String> parts, final List<String> data, int mobCount) throws Exception
+	public static void spawnmob(final IEssentials ess, final Server server, final CommandSource sender, final User target, final List<String> parts, final List<String> data, int mobCount) throws Exception
 	{
 		spawnmob(ess, server, sender, target, target.getLocation(), parts, data, mobCount);
 	}
 
 	// This method spawns a mob at loc, owned by target
-	public static void spawnmob(final IEssentials ess, final Server server, final CommandSender sender, final User target, final Location loc, final List<String> parts, final List<String> data, int mobCount) throws Exception
+	public static void spawnmob(final IEssentials ess, final Server server, final CommandSource sender, final User target, final Location loc, final List<String> parts, final List<String> data, int mobCount) throws Exception
 	{
 		final Location sloc = LocationUtil.getSafeDestination(loc);
 
@@ -126,7 +125,7 @@ public class SpawnMob
 		if (mobCount > effectiveLimit)
 		{
 			mobCount = effectiveLimit;
-			sender.sendMessage(_("mobSpawnLimit"));
+			sender.sendMessage(tl("mobSpawnLimit"));
 		}
 
 		Mob mob = Mob.fromName(parts.get(0)); // Get the first mob
@@ -136,23 +135,23 @@ public class SpawnMob
 			{
 				spawnMob(ess, server, sender, target, sloc, parts, data);
 			}
-			sender.sendMessage(mobCount * parts.size() + " " + mob.name.toLowerCase(Locale.ENGLISH) + mob.suffix + " " + _("spawned"));
+			sender.sendMessage(mobCount * parts.size() + " " + mob.name.toLowerCase(Locale.ENGLISH) + mob.suffix + " " + tl("spawned"));
 		}
 		catch (MobException e1)
 		{
-			throw new Exception(_("unableToSpawnMob"), e1);
+			throw new Exception(tl("unableToSpawnMob"), e1);
 		}
 		catch (NumberFormatException e2)
 		{
-			throw new Exception(_("numberRequired"), e2);
+			throw new Exception(tl("numberRequired"), e2);
 		}
 		catch (NullPointerException np)
 		{
-			throw new Exception(_("soloMob"), np);
+			throw new Exception(tl("soloMob"), np);
 		}
 	}
 
-	private static void spawnMob(final IEssentials ess, final Server server, final CommandSender sender, final User target, final Location sloc, List<String> parts, List<String> data) throws Exception
+	private static void spawnMob(final IEssentials ess, final Server server, final CommandSource sender, final User target, final Location sloc, List<String> parts, List<String> data) throws Exception
 	{
 		Mob mob;
 		Entity spawnedMob = null;
@@ -191,46 +190,43 @@ public class SpawnMob
 		}
 	}
 
-	private static void checkSpawnable(IEssentials ess, CommandSender sender, Mob mob) throws Exception
+	private static void checkSpawnable(IEssentials ess, CommandSource sender, Mob mob) throws Exception
 	{
 		if (mob == null)
 		{
-			throw new Exception(_("invalidMob"));
+			throw new Exception(tl("invalidMob"));
 		}
 
 		if (ess.getSettings().getProtectPreventSpawn(mob.getType().toString().toLowerCase(Locale.ENGLISH)))
 		{
-			throw new Exception(_("disabledToSpawnMob"));
+			throw new Exception(tl("disabledToSpawnMob"));
 		}
 
-		if (sender instanceof Player && !ess.getUser(sender).isAuthorized("essentials.spawnmob." + mob.name.toLowerCase(Locale.ENGLISH)))
+		if (sender.isPlayer() && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.spawnmob." + mob.name.toLowerCase(Locale.ENGLISH)))
 		{
-			throw new Exception(_("noPermToSpawnMob"));
+			throw new Exception(tl("noPermToSpawnMob"));
 		}
 	}
 
-	private static void changeMobData(final CommandSender sender, final EntityType type, final Entity spawned, final String inputData, final User target) throws Exception
+	private static void changeMobData(final CommandSource sender, final EntityType type, final Entity spawned, final String inputData, final User target) throws Exception
 	{
 		String data = inputData;
 
-		if (data.equals(""))
+		if (data.isEmpty())
 		{
-			sender.sendMessage(_("mobDataList", StringUtil.joinList(MobData.getValidHelp(spawned))));
+			sender.sendMessage(tl("mobDataList", StringUtil.joinList(MobData.getValidHelp(spawned))));
 		}
-		
-		MobData newData = MobData.fromData(spawned, data);
-		while (newData != null) {
-			newData.setData(spawned, target.getBase(), data);
-			data = data.replace(newData.getMatched(), "");
-			newData = MobData.fromData(spawned, data);
-		}
-		
+
 		if (spawned instanceof Zombie || type == EntityType.SKELETON)
 		{
 			if (inputData.contains("armor") || inputData.contains("armour"))
 			{
 				final EntityEquipment invent = ((LivingEntity)spawned).getEquipment();
-				if (inputData.contains("diamond"))
+				if (inputData.contains("noarmor") || inputData.contains("noarmour"))
+				{
+					invent.clear();
+				}
+				else if (inputData.contains("diamond"))
 				{
 					invent.setBoots(new ItemStack(Material.DIAMOND_BOOTS, 1));
 					invent.setLeggings(new ItemStack(Material.DIAMOND_LEGGINGS, 1));
@@ -251,10 +247,6 @@ public class SpawnMob
 					invent.setChestplate(new ItemStack(Material.LEATHER_CHESTPLATE, 1));
 					invent.setHelmet(new ItemStack(Material.LEATHER_HELMET, 1));
 				}
-				else if (inputData.contains("no"))
-				{
-					invent.clear();
-				}
 				else
 				{
 					invent.setBoots(new ItemStack(Material.IRON_BOOTS, 1));
@@ -268,6 +260,14 @@ public class SpawnMob
 				invent.setHelmetDropChance(0f);
 			}
 
+		}
+
+		MobData newData = MobData.fromData(spawned, data);
+		while (newData != null)
+		{
+			newData.setData(spawned, target.getBase(), data);
+			data = data.replace(newData.getMatched(), "");
+			newData = MobData.fromData(spawned, data);
 		}
 	}
 

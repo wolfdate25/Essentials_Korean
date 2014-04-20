@@ -1,8 +1,6 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
-import net.ess3.api.IUser;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.craftbukkit.InventoryWorkaround;
 import com.earth2me.essentials.craftbukkit.SetExpFix;
 import java.io.File;
@@ -15,6 +13,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.IEssentials;
+import net.ess3.api.IUser;
+import net.ess3.api.MaxMoneyException;
 import org.bukkit.Location;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
@@ -98,13 +99,13 @@ public class Trade
 			&& getMoney().signum() > 0
 			&& !user.canAfford(getMoney()))
 		{
-			throw new ChargeException(_("notEnoughMoney"));
+			throw new ChargeException(tl("notEnoughMoney"));
 		}
 
 		if (getItemStack() != null
 			&& !user.getBase().getInventory().containsAtLeast(itemStack, itemStack.getAmount()))
 		{
-			throw new ChargeException(_("missingItems", getItemStack().getAmount(), getItemStack().getType().toString().toLowerCase(Locale.ENGLISH).replace("_", " ")));
+			throw new ChargeException(tl("missingItems", getItemStack().getAmount(), ess.getItemDb().name(getItemStack())));
 		}
 
 		BigDecimal money;
@@ -112,22 +113,22 @@ public class Trade
 			&& (money = getCommandCost(user)).signum() > 0
 			&& !user.canAfford(money))
 		{
-			throw new ChargeException(_("notEnoughMoney"));
+			throw new ChargeException(tl("notEnoughMoney"));
 		}
 
 		if (exp != null && exp > 0
 			&& SetExpFix.getTotalExperience(user.getBase()) < exp)
 		{
-			throw new ChargeException(_("notEnoughExperience"));
+			throw new ChargeException(tl("notEnoughExperience"));
 		}
 	}
 
-	public boolean pay(final IUser user)
+	public boolean pay(final IUser user) throws MaxMoneyException
 	{
 		return pay(user, OverflowType.ABORT) == null;
 	}
 
-	public Map<Integer, ItemStack> pay(final IUser user, final OverflowType type)
+	public Map<Integer, ItemStack> pay(final IUser user, final OverflowType type) throws MaxMoneyException
 	{
 		if (getMoney() != null && getMoney().signum() > 0)
 		{
@@ -222,7 +223,7 @@ public class Trade
 			}
 			if (!user.canAfford(getMoney()) && getMoney().signum() > 0)
 			{
-				throw new ChargeException(_("notEnoughMoney"));
+				throw new ChargeException(tl("notEnoughMoney"));
 			}
 			user.takeMoney(getMoney());
 		}
@@ -234,7 +235,7 @@ public class Trade
 			}
 			if (!user.getBase().getInventory().containsAtLeast(getItemStack(), getItemStack().getAmount()))
 			{
-				throw new ChargeException(_("missingItems", getItemStack().getAmount(), getItemStack().getType().toString().toLowerCase(Locale.ENGLISH).replace("_", " ")));
+				throw new ChargeException(tl("missingItems", getItemStack().getAmount(), getItemStack().getType().toString().toLowerCase(Locale.ENGLISH).replace("_", " ")));
 			}
 			user.getBase().getInventory().removeItem(getItemStack());
 			user.getBase().updateInventory();
@@ -244,7 +245,7 @@ public class Trade
 			final BigDecimal cost = getCommandCost(user);
 			if (!user.canAfford(cost) && cost.signum() > 0)
 			{
-				throw new ChargeException(_("notEnoughMoney"));
+				throw new ChargeException(tl("notEnoughMoney"));
 			}
 			user.takeMoney(cost);
 		}
@@ -257,7 +258,7 @@ public class Trade
 			final int experience = SetExpFix.getTotalExperience(user.getBase());
 			if (experience < getExperience() && getExperience() > 0)
 			{
-				throw new ChargeException(_("notEnoughExperience"));
+				throw new ChargeException(tl("notEnoughExperience"));
 			}
 			SetExpFix.setTotalExperience(user.getBase(), experience - getExperience());
 		}
@@ -340,7 +341,7 @@ public class Trade
 			}
 			catch (IOException ex)
 			{
-				Logger.getLogger("Minecraft").log(Level.SEVERE, null, ex);
+				Logger.getLogger("Essentials").log(Level.SEVERE, null, ex);
 			}
 		}
 		StringBuilder sb = new StringBuilder();
@@ -428,7 +429,7 @@ public class Trade
 		}
 		catch (IOException ex)
 		{
-			Logger.getLogger("Minecraft").log(Level.SEVERE, null, ex);
+			Logger.getLogger("Essentials").log(Level.SEVERE, null, ex);
 		}
 	}
 
@@ -442,7 +443,7 @@ public class Trade
 			}
 			catch (IOException ex)
 			{
-				Logger.getLogger("Minecraft").log(Level.SEVERE, null, ex);
+				Logger.getLogger("Essentials").log(Level.SEVERE, null, ex);
 			}
 			fw = null;
 		}

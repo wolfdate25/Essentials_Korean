@@ -1,8 +1,8 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
 import com.earth2me.essentials.utils.LocationUtil;
 import java.util.Locale;
+import net.ess3.api.IEssentials;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -54,7 +54,7 @@ public class EssentialsBlockListener implements Listener
 		}
 
 		final User user = ess.getUser(event.getPlayer());
-		if (user.hasUnlimited(is) && user.getGameMode() == GameMode.SURVIVAL)
+		if (user.hasUnlimited(is) && user.getBase().getGameMode() == GameMode.SURVIVAL)
 		{
 			ess.scheduleSyncDelayedTask(
 					new Runnable()

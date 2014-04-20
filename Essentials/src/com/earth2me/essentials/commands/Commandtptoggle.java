@@ -1,9 +1,9 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 
 
 public class Commandtptoggle extends EssentialsToggleCommand
@@ -14,7 +14,7 @@ public class Commandtptoggle extends EssentialsToggleCommand
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		toggleOtherPlayers(server, sender, args);
 	}
@@ -27,25 +27,25 @@ public class Commandtptoggle extends EssentialsToggleCommand
 			Boolean toggle = matchToggleArgument(args[0]);
 			if (toggle == null && user.isAuthorized(othersPermission))
 			{
-				toggleOtherPlayers(server, user.getBase(), args);
+				toggleOtherPlayers(server, user.getSource(), args);
 			}
 			else
 			{
-				togglePlayer(user.getBase(), user, toggle);
+				togglePlayer(user.getSource(), user, toggle);
 			}
 		}
 		else if (args.length == 2 && user.isAuthorized(othersPermission))
 		{
-			toggleOtherPlayers(server, user.getBase(), args);
+			toggleOtherPlayers(server, user.getSource(), args);
 		}
 		else
 		{
-			togglePlayer(user.getBase(), user, null);
+			togglePlayer(user.getSource(), user, null);
 		}
 	}
 
 	@Override
-	void togglePlayer(CommandSender sender, User user, Boolean enabled)
+	void togglePlayer(CommandSource sender, User user, Boolean enabled)
 	{
 		if (enabled == null)
 		{
@@ -54,10 +54,10 @@ public class Commandtptoggle extends EssentialsToggleCommand
 
 		user.setTeleportEnabled(enabled);
 
-		user.sendMessage(enabled ? _("teleportationEnabled") : _("teleportationDisabled"));
-		if (!sender.equals(user.getBase()))
+		user.sendMessage(enabled ? tl("teleportationEnabled") : tl("teleportationDisabled"));
+		if (!sender.isPlayer() || !sender.getPlayer().equals(user.getBase()))
 		{
-			sender.sendMessage(enabled ? _("teleportationEnabledFor", user.getDisplayName()) : _("teleportationDisabledFor", user.getDisplayName()));
+			sender.sendMessage(enabled ? tl("teleportationEnabledFor", user.getDisplayName()) : tl("teleportationDisabledFor", user.getDisplayName()));
 		}
 	}
 }

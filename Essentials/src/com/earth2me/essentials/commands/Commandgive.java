@@ -1,6 +1,7 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.MetaItemStack;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.craftbukkit.InventoryWorkaround;
@@ -9,8 +10,6 @@ import java.util.Locale;
 import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 
@@ -22,7 +21,7 @@ public class Commandgive extends EssentialsCommand
 	}
 
 	@Override
-	public void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	public void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length < 2)
 		{
@@ -32,15 +31,15 @@ public class Commandgive extends EssentialsCommand
 		ItemStack stack = ess.getItemDb().get(args[1]);
 
 		final String itemname = stack.getType().toString().toLowerCase(Locale.ENGLISH).replace("_", "");
-		if (sender instanceof Player
+		if (sender.isPlayer()
 			&& (ess.getSettings().permissionBasedItemSpawn()
-				? (!ess.getUser(sender).isAuthorized("essentials.itemspawn.item-all")
-				   && !ess.getUser(sender).isAuthorized("essentials.itemspawn.item-" + itemname)
-				   && !ess.getUser(sender).isAuthorized("essentials.itemspawn.item-" + stack.getTypeId()))
-				: (!ess.getUser(sender).isAuthorized("essentials.itemspawn.exempt")
-				   && !ess.getUser(sender).canSpawnItem(stack.getTypeId()))))
+				? (!ess.getUser(sender.getPlayer()).isAuthorized("essentials.itemspawn.item-all")
+				   && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.itemspawn.item-" + itemname)
+				   && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.itemspawn.item-" + stack.getTypeId()))
+				: (!ess.getUser(sender.getPlayer()).isAuthorized("essentials.itemspawn.exempt")
+				   && !ess.getUser(sender.getPlayer()).canSpawnItem(stack.getTypeId()))))
 		{
-			throw new Exception(_("cantSpawnItem", itemname));
+			throw new Exception(tl("cantSpawnItem", itemname));
 		}
 
 		final User giveTo = getPlayer(server, sender, args, 0);
@@ -74,40 +73,45 @@ public class Commandgive extends EssentialsCommand
 		{
 			MetaItemStack metaStack = new MetaItemStack(stack);
 			boolean allowUnsafe = ess.getSettings().allowUnsafeEnchantments();
-			if (allowUnsafe && sender instanceof Player && !ess.getUser(sender).isAuthorized("essentials.enchantments.allowunsafe"))
+			if (allowUnsafe && sender.isPlayer() && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.enchantments.allowunsafe"))
 			{
 				allowUnsafe = false;
 			}
 
-			metaStack.parseStringMeta(sender, allowUnsafe, args, NumberUtil.isInt(args[3]) ? 4 : 3, ess);
+			int metaStart = NumberUtil.isInt(args[3]) ? 4 : 3;
+
+			if (args.length > metaStart)
+			{
+				metaStack.parseStringMeta(sender, allowUnsafe, args, metaStart, ess);
+			}
 
 			stack = metaStack.getItemStack();
 		}
 
 		if (stack.getType() == Material.AIR)
 		{
-			throw new Exception(_("cantSpawnItem", "Air"));
+			throw new Exception(tl("cantSpawnItem", "Air"));
 		}
 
 		final String itemName = stack.getType().toString().toLowerCase(Locale.ENGLISH).replace('_', ' ');
-		sender.sendMessage(_("giveSpawn", stack.getAmount(), itemName, giveTo.getDisplayName()));
+		sender.sendMessage(tl("giveSpawn", stack.getAmount(), itemName, giveTo.getDisplayName()));
 
 		Map<Integer, ItemStack> leftovers;
 
 		if (giveTo.isAuthorized("essentials.oversizedstacks"))
 		{
-			leftovers = InventoryWorkaround.addOversizedItems(giveTo.getInventory(), ess.getSettings().getOversizedStackSize(), stack);
+			leftovers = InventoryWorkaround.addOversizedItems(giveTo.getBase().getInventory(), ess.getSettings().getOversizedStackSize(), stack);
 		}
 		else
 		{
-			leftovers = InventoryWorkaround.addItems(giveTo.getInventory(), stack);
+			leftovers = InventoryWorkaround.addItems(giveTo.getBase().getInventory(), stack);
 		}
 
 		for (ItemStack item : leftovers.values())
 		{
-			sender.sendMessage(_("giveSpawnFailure", item.getAmount(), itemName, giveTo.getDisplayName()));
+			sender.sendMessage(tl("giveSpawnFailure", item.getAmount(), itemName, giveTo.getDisplayName()));
 		}
 
-		giveTo.updateInventory();
+		giveTo.getBase().updateInventory();
 	}
 }

@@ -41,6 +41,11 @@ change-displayname: true
 # Do not edit this setting unless you know what you are doing!
 #add-prefix-suffix: false
 
+# If the teleport destination is unsafe, should players be teleported to the nearest safe location?
+# If this is set to true, Essentials will attempt to teleport players close to the intended destination.
+# If this is set to false, attempted teleports to unsafe locations will be cancelled with a warning.
+teleport-safety: true
+
 # The delay, in seconds, required between /home, /tp, etc.
 teleport-cooldown: 0
 
@@ -51,10 +56,10 @@ teleport-delay: 0
 # This will also prevent the player attacking other players.
 teleport-invulnerability: 4
 
-# The delay, in seconds, required between /heal attempts.
+# The delay, in seconds, required between /heal or /feed attempts.
 heal-cooldown: 60
 
-# What to prevent from /i /give.
+# What to prevent from /item and /give.
 # e.g item-spawn-blacklist: 46,11,10
 item-spawn-blacklist:
 
@@ -89,15 +94,15 @@ warn-on-smite: true
 #
 # If you have two plugin with the same command and you wish to force Essentials to take over, you need an alias.
 # To force essentials to take 'god' alias 'god' to 'egod'.
-# See http://wiki.bukkit.org/Bukkit.yml#aliases for more information
+# See http://wiki.bukkit.org/Commands.yml#aliases for more information
 
 overridden-commands:
 #  - god
 #  - info
 
 # Disabling commands here will prevent Essentials handling the command, this will not affect command conflicts.
-# Commands should fallback to the vanilla versions if available.
 # You should not have to disable commands used in other plugins, they will automatically get priority.
+# See http://wiki.bukkit.org/Commands.yml#aliases to map commands to other plugins.
 disabled-commands:
 #  - nick
 #  - clear
@@ -353,6 +358,18 @@ cancel-afk-on-move: true
 # You can disable the death messages of Minecraft here.
 death-messages: true
 
+# Should operators be able to join and part silently.
+# You can control this with permissions if it is enabled.
+allow-silent-join-quit: false
+
+# You can set a custom join message here, set to "none" to disable.
+# You may use color codes, use {USERNAME} the player's name or {PLAYER} for the player's displayname.
+custom-join-message: "none"
+
+# You can set a custom quit message here, set to "none" to disable.
+# You may use color codes, use {USERNAME} the player's name or {PLAYER} for the player's displayname.
+custom-quit-message: "none"
+
 # Add worlds to this list, if you want to automatically disable god mode there.
 no-god-in-worlds:
 #  - world_nether
@@ -417,16 +434,18 @@ update-bed-at-daytime: true
 world-home-permissions: false
 
 # Allow players to have multiple homes.
-# Players need essentials.sethome.multiple before they can have more than 1 home, defaults to 'default' below.
-# Define different amounts of multiple homes for different permissions, e.g. essentials.sethome.multiple.vip
-# People with essentials.sethome.multiple.unlimited are not limited by these numbers.
+# Players need essentials.sethome.multiple before they can have more than 1 home.
+# You can set the default number of multiple homes using the 'default' rank below.
+# To remove the home limit entirely, give people 'essentials.sethome.multiple.unlimited'.
+# To grant different home amounts to different people, you need to define a 'home-rank' below.
+# Create the 'home-rank' below, and give the matching permission: essentials.sethome.multiple.<home-rank>
 # For more information, visit http://wiki.ess3.net/wiki/Multihome
 sethome-multiple:
   default: 3
-  # essentials.sethome.multiple.vip
   vip: 5
-  # essentials.sethome.multiple.staff
   staff: 10
+
+# In this example someone with 'essentials.sethome.multiple' and 'essentials.sethome.multiple.vip' will have 5 homes.
 
 # Set timeout in seconds for players to accept tpa before request is cancelled.
 # Set to 0 for no timeout.
@@ -489,6 +508,8 @@ hide-permissionless-help: true
 # +------------------------------------------------------+ #
 ############################################################
 
+# This section requires essentialschat.jar to work.
+
 chat:
 
   # If EssentialsChat is installed, this will define how far a player's voice travels, in blocks.  Set to 0 to make all chat global.
@@ -517,6 +538,8 @@ chat:
 # |                 EssentialsProtect                    | #
 # +------------------------------------------------------+ #
 ############################################################
+
+# This section requires essentialsprotect.jar to work.
 
 protect:
 
@@ -631,6 +654,8 @@ protect:
 # +------------------------------------------------------+ #
 ############################################################
 
+  # This section requires essentialsantibuild.jar to work.
+
   # Disable various default physics and behaviors
   # For more information, visit http://wiki.ess3.net/wiki/AntiBuild
 
@@ -641,7 +666,7 @@ protect:
 
     # Should people with build: false in permissions be allowed to use items?
     # Set true to disable using for those people.
-    # Setting to false means EssentialsAntiBuild will never prevent you from using.
+    # Setting to false means EssentialsAntiBuild will never prevent you from using items.
     use: true
 
     # Should we tell people they are not allowed to build?
@@ -678,6 +703,8 @@ protect:
 # +------------------------------------------------------+ #
 ############################################################
 
+# This section requires essentialsspawn.jar to work.
+
 newbies:
   # Should we announce to the server when someone logs in for the first time?
   # If so, use this format, replacing {DISPLAYNAME} with the player name.
@@ -690,7 +717,7 @@ newbies:
   spawnpoint: newbies
 
   # Do we want to give users anything on first join? Set to '' to disable
-  # This kit will be given regardless of cost, and permissions.
+  # This kit will be given regardless of cost and permissions, and will not trigger the kit delay.
   #kit: ''
   kit: tools
 

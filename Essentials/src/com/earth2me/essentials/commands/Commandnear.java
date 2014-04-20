@@ -1,11 +1,11 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 
@@ -58,24 +58,23 @@ public class Commandnear extends EssentialsCommand
 			}
 		}
 		
+		radius = Math.abs(radius);
+		
 		if (radius > maxRadius && !user.isAuthorized("essentials.near.maxexempt"))
 		{
-			user.sendMessage(_("radiusTooBig", maxRadius));
+			user.sendMessage(tl("radiusTooBig", maxRadius));
 			radius = maxRadius;
 		}
 		
-		if (otherUser == null || user.isAuthorized("essentials.near.others"))
+		if (otherUser == null || !user.isAuthorized("essentials.near.others"))
 		{
-			user.sendMessage(_("nearbyPlayers", getLocal(server, otherUser == null ? user : otherUser, radius)));
+			otherUser = user;
 		}
-		else
-		{
-			throw new NotEnoughArgumentsException(_("noPerm", "essentials.near.others"));
-		}
+		user.sendMessage(tl("nearbyPlayers", getLocal(server, otherUser, radius)));
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length == 0)
 		{
@@ -93,7 +92,7 @@ public class Commandnear extends EssentialsCommand
 			{
 			}
 		}
-		sender.sendMessage(_("nearbyPlayers", getLocal(server, otherUser, radius)));
+		sender.sendMessage(tl("nearbyPlayers", getLocal(server, otherUser, radius)));
 	}
 
 	private String getLocal(final Server server, final User user, final long radius)
@@ -126,6 +125,6 @@ public class Commandnear extends EssentialsCommand
 				}
 			}
 		}
-		return output.length() > 1 ? output.toString() : _("none");
+		return output.length() > 1 ? output.toString() : tl("none");
 	}
 }

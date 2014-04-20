@@ -3,6 +3,7 @@ package com.earth2me.essentials.craftbukkit;
 import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -35,7 +36,7 @@ public final class InventoryWorkaround
 	}
 
 	// Returns what it couldnt store
-	// This will will abort if it couldn't store all items	
+	// This will will abort if it couldn't store all items
 	public static Map<Integer, ItemStack> addAllItems(final Inventory inventory, final ItemStack... items)
 	{
 		final Inventory fakeInventory = Bukkit.getServer().createInventory(null, inventory.getType());
@@ -69,9 +70,9 @@ public final class InventoryWorkaround
 		// combine items
 
 		final ItemStack[] combined = new ItemStack[items.length];
-		for (int i = 0; i < items.length; i++)
+		for (ItemStack item : items)
 		{
-			if (items[i] == null || items[i].getAmount() < 1)
+			if (item == null || item.getAmount() < 1)
 			{
 				continue;
 			}
@@ -79,12 +80,12 @@ public final class InventoryWorkaround
 			{
 				if (combined[j] == null)
 				{
-					combined[j] = items[i].clone();
+					combined[j] = item.clone();
 					break;
 				}
-				if (combined[j].isSimilar(items[i]))
+				if (combined[j].isSimilar(item))
 				{
-					combined[j].setAmount(combined[j].getAmount() + items[i].getAmount());
+					combined[j].setAmount(combined[j].getAmount() + item.getAmount());
 					break;
 				}
 			}
@@ -94,7 +95,7 @@ public final class InventoryWorkaround
 		for (int i = 0; i < combined.length; i++)
 		{
 			final ItemStack item = combined[i];
-			if (item == null)
+			if (item == null || item.getType() == Material.AIR)
 			{
 				continue;
 			}

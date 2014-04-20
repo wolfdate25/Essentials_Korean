@@ -1,6 +1,8 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import com.earth2me.essentials.EssentialsUpgrade;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.UserMap;
 import com.earth2me.essentials.metrics.Metrics;
@@ -9,12 +11,11 @@ import com.earth2me.essentials.utils.NumberUtil;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 // This command has 4 undocumented behaviours #EasterEgg
@@ -28,7 +29,7 @@ public class Commandessentials extends EssentialsCommand
 	private final transient Map<Player, Block> noteBlocks = new HashMap<Player, Block>();
 
 	@Override
-	public void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	public void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length == 0)
 		{
@@ -58,6 +59,10 @@ public class Commandessentials extends EssentialsCommand
 		{
 			run_cleanup(server, sender, commandLabel, args);
 		}
+		else if (args[0].equalsIgnoreCase("uuidconvert"))
+		{
+			run_uuidconvert(server, sender, commandLabel, args);
+		}
 		else
 		{
 			run_reload(server, sender, commandLabel, args);
@@ -65,7 +70,7 @@ public class Commandessentials extends EssentialsCommand
 	}
 
 	//If you do not supply an argument this command will list 'overridden' commands.
-	private void run_disabled(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	private void run_disabled(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		sender.sendMessage("/<command> <reload/debug>");
 
@@ -80,12 +85,12 @@ public class Commandessentials extends EssentialsCommand
 		}
 		if (disabledCommands.length() > 0)
 		{
-			sender.sendMessage(_("blockList"));
+			sender.sendMessage(tl("blockList"));
 			sender.sendMessage(disabledCommands.toString());
 		}
 	}
 
-	private void run_reset(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	private void run_reset(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length < 2)
 		{
@@ -96,19 +101,19 @@ public class Commandessentials extends EssentialsCommand
 		sender.sendMessage("Reset Essentials userdata for player: " + user.getDisplayName());
 	}
 
-	private void run_debug(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	private void run_debug(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		ess.getSettings().setDebug(!ess.getSettings().isDebug());
 		sender.sendMessage("Essentials " + ess.getDescription().getVersion() + " debug mode " + (ess.getSettings().isDebug() ? "enabled" : "disabled"));
 	}
 
-	private void run_reload(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	private void run_reload(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		ess.reload();
-		sender.sendMessage(_("essentialsReload", ess.getDescription().getVersion()));
+		sender.sendMessage(tl("essentialsReload", ess.getDescription().getVersion()));
 	}
 
-	private void run_nya(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	private void run_nya(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		final Map<String, Float> noteMap = new HashMap<String, Float>();
 		noteMap.put("1F#", 0.5f);
@@ -150,7 +155,7 @@ public class Commandessentials extends EssentialsCommand
 				{
 					Commandessentials.this.stopTune();
 				}
-				if (note.isEmpty() || note == null)
+				if (note == null || note.isEmpty())
 				{
 					return;
 				}
@@ -174,28 +179,58 @@ public class Commandessentials extends EssentialsCommand
 		}
 		noteBlocks.clear();
 	}
-
-	private void run_moo(final Server server, final CommandSender sender, final String command, final String args[])
+	private final String[] consoleMoo = new String[]
 	{
-		if (sender instanceof ConsoleCommandSender)
+		"         (__)",
+		"         (oo)",
+		"   /------\\/",
+		"  / |    ||",
+		" *  /\\---/\\",
+		"    ~~   ~~",
+		"....\"Have you mooed today?\"..."
+	};
+	private final String[] playerMoo = new String[]
+	{
+		"            (__)",
+		"            (oo)",
+		"   /------\\/",
+		"  /  |      | |",
+		" *  /\\---/\\",
+		"    ~~    ~~",
+		"....\"Have you mooed today?\"..."
+	};
+
+	private void run_moo(final Server server, final CommandSource sender, final String command, final String args[])
+	{
+		if (args.length == 2 && args[1].equals("moo"))
 		{
-			sender.sendMessage(new String[]
-					{
-						"         (__)", "         (oo)", "   /------\\/", "  / |    ||", " *  /\\---/\\", "    ~~   ~~", "....\"Have you mooed today?\"..."
-					});
+			for (String s : consoleMoo)
+			{
+				logger.info(s);
+			}
+			for (Player player : ess.getServer().getOnlinePlayers())
+			{
+				player.sendMessage(playerMoo);
+				player.playSound(player.getLocation(), Sound.COW_IDLE, 1, 1.0f);
+			}
 		}
 		else
 		{
-			sender.sendMessage(new String[]
-					{
-						"            (__)", "            (oo)", "   /------\\/", "  /  |      | |", " *  /\\---/\\", "    ~~    ~~", "....\"Have you mooed today?\"..."
-					});
-			final Player player = (Player)sender;
-			player.playSound(player.getLocation(), Sound.COW_IDLE, 1, 1.0f);
+			if (sender.isPlayer())
+			{
+				sender.getSender().sendMessage(playerMoo);
+				final Player player = sender.getPlayer();
+				player.playSound(player.getLocation(), Sound.COW_IDLE, 1, 1.0f);
+
+			}
+			else
+			{
+				sender.getSender().sendMessage(consoleMoo);
+			}
 		}
 	}
 
-	private void run_optout(final Server server, final CommandSender sender, final String command, final String args[])
+	private void run_optout(final Server server, final CommandSource sender, final String command, final String args[])
 	{
 		final Metrics metrics = ess.getMetrics();
 		try
@@ -209,7 +244,7 @@ public class Commandessentials extends EssentialsCommand
 			{
 				metrics.disable();
 			}
-			sender.sendMessage("Anonymous Metrics are now: " + (metrics.isOptOut() ? "disabled" : "enabled"));
+			sender.sendMessage("Anonymous Metrics are now " + (metrics.isOptOut() ? "disabled" : "enabled") + " for all plugins.");
 		}
 		catch (IOException ex)
 		{
@@ -217,7 +252,7 @@ public class Commandessentials extends EssentialsCommand
 		}
 	}
 
-	private void run_cleanup(final Server server, final CommandSender sender, final String command, final String args[]) throws Exception
+	private void run_cleanup(final Server server, final CommandSource sender, final String command, final String args[]) throws Exception
 	{
 		if (args.length < 2 || !NumberUtil.isInt(args[1]))
 		{
@@ -226,7 +261,7 @@ public class Commandessentials extends EssentialsCommand
 			sender.sendMessage("Unless you define larger default values, this command wil ignore people who have more than 0 money/homes/bans.");
 			throw new Exception("/<command> cleanup <days> [money] [homes] [ban count]");
 		}
-		sender.sendMessage(_("cleaning"));
+		sender.sendMessage(tl("cleaning"));
 
 		final long daysArg = Long.parseLong(args[1]);
 		final double moneyArg = args.length >= 3 ? Double.parseDouble(args[2].replaceAll("[^0-9\\.]", "")) : 0;
@@ -240,7 +275,7 @@ public class Commandessentials extends EssentialsCommand
 			public void run()
 			{
 				Long currTime = System.currentTimeMillis();
-				for (String u : userMap.getAllUniqueUsers())
+				for (UUID u : userMap.getAllUniqueUsers())
 				{
 					final User user = ess.getUserMap().getUser(u);
 					if (user == null)
@@ -248,7 +283,7 @@ public class Commandessentials extends EssentialsCommand
 						continue;
 					}
 
-					int ban = user.getBanReason().equals("") ? 0 : 1;
+					int ban = user.getBanReason().isEmpty() ? 0 : 1;
 
 					long lastLog = user.getLastLogout();
 					if (lastLog == 0)
@@ -278,9 +313,16 @@ public class Commandessentials extends EssentialsCommand
 
 					user.reset();
 				}
-				sender.sendMessage(_("cleaned"));
+				sender.sendMessage(tl("cleaned"));
 			}
 		});
 
+	}
+	
+	private void run_uuidconvert(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
+	{
+		sender.sendMessage("Starting Essentials UUID userdata conversion, this may lag the server.");
+		EssentialsUpgrade.uuidFileConvert(ess);
+		sender.sendMessage("UUID conversion complete, check your server log for more information.");
 	}
 }

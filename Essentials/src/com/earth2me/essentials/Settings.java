@@ -1,7 +1,6 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.commands.IEssentialsCommand;
 import com.earth2me.essentials.signs.EssentialsSign;
 import com.earth2me.essentials.signs.Signs;
@@ -13,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.IEssentials;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,7 +24,7 @@ import org.bukkit.inventory.ItemStack;
 public class Settings implements net.ess3.api.ISettings
 {
 	private final transient EssentialsConf config;
-	private final static Logger logger = Logger.getLogger("Minecraft");
+	private static final Logger logger = Logger.getLogger("Essentials");
 	private final transient IEssentials ess;
 	private boolean metricsEnabled = true;
 
@@ -93,6 +93,47 @@ public class Settings implements net.ess3.api.ISettings
 	public int getChatRadius()
 	{
 		return chatRadius;
+	}
+	
+	// #easteregg
+	private char chatShout = '!';
+
+	private char _getChatShout()
+	{
+		return config.getString("chat.shout", "!").charAt(0);
+	}
+
+	@Override
+	public char getChatShout()
+	{
+		return chatShout;
+	}
+	
+	// #easteregg
+	private char chatQuestion = '?';
+
+	private char _getChatQuestion()
+	{
+		return config.getString("chat.question", "?").charAt(0);
+	}
+
+	@Override
+	public char getChatQuestion()
+	{
+		return chatQuestion;
+	}
+
+	private boolean teleportSafety;
+
+	public boolean _isTeleportSafetyEnabled()
+	{
+		return config.getBoolean("teleport-safety", true);
+	}
+
+	@Override
+	public boolean isTeleportSafetyEnabled()
+	{
+		return teleportSafety;
 	}
 
 	@Override
@@ -192,7 +233,6 @@ public class Settings implements net.ess3.api.ISettings
 			final ConfigurationSection newSection = new MemoryConfiguration();
 			for (String command : section.getKeys(false))
 			{
-				PluginCommand cmd = ess.getServer().getPluginCommand(command);
 				if (command.charAt(0) == '/')
 				{
 					ess.getLogger().warning("Invalid command cost. '" + command + "' should not start with '/'.");
@@ -402,7 +442,7 @@ public class Settings implements net.ess3.api.ISettings
 	{
 		return config.getString("backup.command", null);
 	}
-	private Map<String, String> chatFormats = Collections.synchronizedMap(new HashMap<String, String>());
+	private final Map<String, String> chatFormats = Collections.synchronizedMap(new HashMap<String, String>());
 
 	@Override
 	public String getChatFormat(String group)
@@ -411,11 +451,12 @@ public class Settings implements net.ess3.api.ISettings
 		if (mFormat == null)
 		{
 			mFormat = config.getString("chat.group-formats." + (group == null ? "Default" : group),
-											 config.getString("chat.format", "&7[{GROUP}]&r {DISPLAYNAME}&7:&r {MESSAGE}"));
+									   config.getString("chat.format", "&7[{GROUP}]&r {DISPLAYNAME}&7:&r {MESSAGE}"));
 			mFormat = FormatUtil.replaceFormat(mFormat);
 			mFormat = mFormat.replace("{DISPLAYNAME}", "%1$s");
 			mFormat = mFormat.replace("{MESSAGE}", "%2$s");
 			mFormat = mFormat.replace("{GROUP}", "{0}");
+			mFormat = mFormat.replace("{WORLD}", "{1}");
 			mFormat = mFormat.replace("{WORLDNAME}", "{1}");
 			mFormat = mFormat.replace("{SHORTWORLDNAME}", "{2}");
 			mFormat = mFormat.replace("{TEAMPREFIX}", "{3}");
@@ -486,6 +527,7 @@ public class Settings implements net.ess3.api.ISettings
 		config.load();
 		noGodWorlds = new HashSet<String>(config.getStringList("no-god-in-worlds"));
 		enabledSigns = _getEnabledSigns();
+		teleportSafety = _isTeleportSafetyEnabled();
 		teleportInvulnerabilityTime = _getTeleportInvulnerability();
 		teleportInvulnerability = _isTeleportInvulnerability();
 		disableItemPickupWhileAfk = _getDisableItemPickupWhileAfk();
@@ -509,6 +551,8 @@ public class Settings implements net.ess3.api.ISettings
 		disablePrefix = _disablePrefix();
 		disableSuffix = _disableSuffix();
 		chatRadius = _getChatRadius();
+		chatShout = _getChatShout();
+		chatQuestion = _getChatQuestion();
 		commandCosts = _getCommandCosts();
 		socialSpyCommands = _getSocialSpyCommands();
 		warnOnBuildDisallow = _warnOnBuildDisallow();
@@ -518,6 +562,12 @@ public class Settings implements net.ess3.api.ISettings
 		economyLagWarning = _getEconomyLagWarning();
 		economyLog = _isEcoLogEnabled();
 		economyLogUpdate = _isEcoLogUpdateEnabled();
+		economyDisabled = _isEcoDisabled();
+		allowSilentJoin = _isJoinQuitMessagesDisabled();
+		customJoinMessage = _getCustomJoinMessage();
+		isCustomJoinMessage = !customJoinMessage.equals("none");
+		customQuitMessage = _getCustomQuitMessage();
+		isCustomQuitMessage = !customQuitMessage.equals("none");
 	}
 	private List<Integer> itemSpawnBl = new ArrayList<Integer>();
 
@@ -549,7 +599,7 @@ public class Settings implements net.ess3.api.ISettings
 			}
 			catch (Exception ex)
 			{
-				logger.log(Level.SEVERE, _("unknownItemInList", itemName, "item-spawn-blacklist"));
+				logger.log(Level.SEVERE, tl("unknownItemInList", itemName, "item-spawn-blacklist"));
 			}
 		}
 		return epItemSpwn;
@@ -585,7 +635,7 @@ public class Settings implements net.ess3.api.ISettings
 			}
 			catch (Exception ex)
 			{
-				logger.log(Level.SEVERE, _("unknownItemInList", signName, "enabledSigns"));
+				logger.log(Level.SEVERE, tl("unknownItemInList", signName, "enabledSigns"));
 				continue;
 			}
 			signsEnabled = true;
@@ -650,12 +700,18 @@ public class Settings implements net.ess3.api.ISettings
 	{
 		return config.getBoolean("trade-in-stacks-" + id, false);
 	}
-
 	// #easteregg
+	private boolean economyDisabled = false;
+
+	public boolean _isEcoDisabled()
+	{
+		return config.getBoolean("disable-eco", false);
+	}
+
 	@Override
 	public boolean isEcoDisabled()
 	{
-		return config.getBoolean("disable-eco", false);
+		return economyDisabled;
 	}
 
 	@Override
@@ -683,7 +739,7 @@ public class Settings implements net.ess3.api.ISettings
 			}
 			catch (Exception ex)
 			{
-				logger.log(Level.SEVERE, _("unknownItemInList", itemName, configName));
+				logger.log(Level.SEVERE, tl("unknownItemInList", itemName, configName));
 			}
 		}
 		return list;
@@ -700,7 +756,7 @@ public class Settings implements net.ess3.api.ISettings
 	{
 		return config.getBoolean(configName, def);
 	}
-	private final static BigDecimal MAXMONEY = new BigDecimal("10000000000000");
+	private static final BigDecimal MAXMONEY = new BigDecimal("10000000000000");
 	private BigDecimal maxMoney = MAXMONEY;
 
 	private BigDecimal _getMaxMoney()
@@ -713,7 +769,7 @@ public class Settings implements net.ess3.api.ISettings
 	{
 		return maxMoney;
 	}
-	private final static BigDecimal MINMONEY = new BigDecimal("-10000000000000");
+	private static final BigDecimal MINMONEY = new BigDecimal("-10000000000000");
 	private BigDecimal minMoney = MINMONEY;
 
 	private BigDecimal _getMinMoney()
@@ -1105,8 +1161,59 @@ public class Settings implements net.ess3.api.ISettings
 	{
 		return config.getInt("max-nick-length", 30);
 	}
-	
+	private boolean allowSilentJoin;
+
+	public boolean _isJoinQuitMessagesDisabled()
+	{
+		return config.getBoolean("allow-silent-join-quit");
+	}
+
+	@Override
+	public boolean allowSilentJoinQuit()
+	{
+		return allowSilentJoin;
+	}
+	private String customJoinMessage;
+	private boolean isCustomJoinMessage;
+
+	public String _getCustomJoinMessage()
+	{
+		return FormatUtil.replaceFormat(config.getString("custom-join-message", "none"));
+	}
+
+	@Override
+	public String getCustomJoinMessage()
+	{
+		return customJoinMessage;
+	}
+
+	@Override
+	public boolean isCustomJoinMessage()
+	{
+		return isCustomJoinMessage;
+	}
+	private String customQuitMessage;
+	private boolean isCustomQuitMessage;
+
+	public String _getCustomQuitMessage()
+	{
+		return FormatUtil.replaceFormat(config.getString("custom-quit-message", "none"));
+	}
+
+	@Override
+	public String getCustomQuitMessage()
+	{
+		return customQuitMessage;
+	}
+
+	@Override
+	public boolean isCustomQuitMessage()
+	{
+		return isCustomQuitMessage;
+	}
+
 	// #easteregg
+	@Override
 	public int getMaxUserCacheCount()
 	{
 		long count = Runtime.getRuntime().maxMemory() / 1024 / 96;

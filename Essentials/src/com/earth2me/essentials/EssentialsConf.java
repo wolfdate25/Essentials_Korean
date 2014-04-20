@@ -1,8 +1,6 @@
 package com.earth2me.essentials;
 
-import static com.earth2me.essentials.I18n._;
-
-import net.ess3.api.InvalidWorldException;
+import static com.earth2me.essentials.I18n.tl;
 import com.google.common.io.Files;
 import java.io.*;
 import java.math.BigDecimal;
@@ -20,6 +18,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.InvalidWorldException;
 import org.bukkit.*;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -32,11 +31,11 @@ import org.bukkit.util.Vector;
 
 public class EssentialsConf extends YamlConfiguration
 {
-	private static final Logger LOGGER = Logger.getLogger("Minecraft");
-	private final File configFile;
-	private String templateName = null;
-	private Class<?> resourceClass = EssentialsConf.class;
-	private static final Charset UTF8 = Charset.forName("UTF-8");
+	protected static final Logger LOGGER = Logger.getLogger("Essentials");
+	protected final File configFile;
+	protected String templateName = null;
+	protected static final Charset UTF8 = Charset.forName("UTF-8");
+	private Class<?> resourceClass = EssentialsConf.class;	
 	private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 	private final AtomicInteger pendingDiskWrites = new AtomicInteger(0);
 
@@ -51,14 +50,14 @@ public class EssentialsConf extends YamlConfiguration
 	{
 		if (pendingDiskWrites.get() != 0)
 		{
-			LOGGER.log(Level.INFO, "File " + configFile + " not read, because it's not yet written to disk.");
+			LOGGER.log(Level.INFO, "File {0} not read, because it''s not yet written to disk.", configFile);
 			return;
 		}
 		if (!configFile.getParentFile().exists())
 		{
 			if (!configFile.getParentFile().mkdirs())
 			{
-				LOGGER.log(Level.SEVERE, _("failedToCreateConfig", configFile.toString()));
+				LOGGER.log(Level.SEVERE, tl("failedToCreateConfig", configFile.toString()));
 			}
 		}
 		// This will delete files where the first character is 0. In most cases they are broken.
@@ -96,12 +95,16 @@ public class EssentialsConf extends YamlConfiguration
 				LOGGER.log(Level.SEVERE, null, ex);
 			}
 		}
-
+				
 		if (!configFile.exists())
 		{
-			if (templateName != null)
+			if (legacyFileExists())
 			{
-				LOGGER.log(Level.INFO, _("creatingConfigFromTemplate", configFile.toString()));
+				convertLegacyFile();
+			}
+			else if (templateName != null)
+			{
+				LOGGER.log(Level.INFO, tl("creatingConfigFromTemplate", configFile.toString()));
 				createFromTemplate();
 			}
 			else
@@ -117,15 +120,17 @@ public class EssentialsConf extends YamlConfiguration
 			try
 			{
 				long startSize = configFile.length();
-				if (startSize > Integer.MAX_VALUE) {
+				if (startSize > Integer.MAX_VALUE)
+				{
 					throw new InvalidConfigurationException("File too big");
 				}
 				ByteBuffer buffer = ByteBuffer.allocate((int)startSize);
 				int length;
 				while ((length = inputStream.read(bytebuffer)) != -1)
 				{
-					if (length > buffer.remaining()) {
-						ByteBuffer resize = ByteBuffer.allocate(buffer.capacity()+length-buffer.remaining());
+					if (length > buffer.remaining())
+					{
+						ByteBuffer resize = ByteBuffer.allocate(buffer.capacity() + length - buffer.remaining());
 						int resizePosition = buffer.position();
 						buffer.rewind();
 						resize.put(buffer);
@@ -178,6 +183,16 @@ public class EssentialsConf extends YamlConfiguration
 			LOGGER.log(Level.SEVERE, "The file " + configFile.toString() + " is broken, it has been renamed to " + broken.toString(), ex.getCause());
 		}
 	}
+	
+	public boolean legacyFileExists()
+	{
+		return false;
+	}
+	
+	public void convertLegacyFile()
+	{
+		LOGGER.log(Level.SEVERE, "Unable to import legacy config file.");
+	}
 
 	private void createFromTemplate()
 	{
@@ -188,7 +203,7 @@ public class EssentialsConf extends YamlConfiguration
 			istr = resourceClass.getResourceAsStream(templateName);
 			if (istr == null)
 			{
-				LOGGER.log(Level.SEVERE, _("couldNotFindTemplate", templateName));
+				LOGGER.log(Level.SEVERE, tl("couldNotFindTemplate", templateName));
 				return;
 			}
 			ostr = new FileOutputStream(configFile);
@@ -203,7 +218,7 @@ public class EssentialsConf extends YamlConfiguration
 		}
 		catch (IOException ex)
 		{
-			LOGGER.log(Level.SEVERE, _("failedToWriteConfig", configFile.toString()), ex);
+			LOGGER.log(Level.SEVERE, tl("failedToWriteConfig", configFile.toString()), ex);
 		}
 		finally
 		{
@@ -227,7 +242,7 @@ public class EssentialsConf extends YamlConfiguration
 			}
 			catch (IOException ex)
 			{
-				LOGGER.log(Level.SEVERE, _("failedToCloseConfig", configFile.toString()), ex);
+				LOGGER.log(Level.SEVERE, tl("failedToCloseConfig", configFile.toString()), ex);
 			}
 		}
 	}
@@ -337,7 +352,7 @@ public class EssentialsConf extends YamlConfiguration
 			{
 				if (pendingDiskWrites.get() > 1)
 				{
-					// Writes can be skipped, because they are stored in a queue (in the executor). 
+					// Writes can be skipped, because they are stored in a queue (in the executor).
 					// Only the last is actually written.
 					pendingDiskWrites.decrementAndGet();
 					//LOGGER.log(Level.INFO, configFile + " skipped writing in " + (System.nanoTime() - startTime) + " nsec.");
@@ -351,16 +366,16 @@ public class EssentialsConf extends YamlConfiguration
 					{
 						try
 						{
-							LOGGER.log(Level.INFO, _("creatingEmptyConfig", configFile.toString()));
+							LOGGER.log(Level.INFO, tl("creatingEmptyConfig", configFile.toString()));
 							if (!configFile.createNewFile())
 							{
-								LOGGER.log(Level.SEVERE, _("failedToCreateConfig", configFile.toString()));
+								LOGGER.log(Level.SEVERE, tl("failedToCreateConfig", configFile.toString()));
 								return;
 							}
 						}
 						catch (IOException ex)
 						{
-							LOGGER.log(Level.SEVERE, _("failedToCreateConfig", configFile.toString()), ex);
+							LOGGER.log(Level.SEVERE, tl("failedToCreateConfig", configFile.toString()), ex);
 							return;
 						}
 					}
@@ -404,7 +419,8 @@ public class EssentialsConf extends YamlConfiguration
 
 	public Location getLocation(final String path, final Server server) throws InvalidWorldException
 	{
-		final String worldName = getString((path == null ? "" : path + ".") + "world");
+		final String worldString = (path == null ? "" : path + ".") + "world";
+		final String worldName = getString(worldString);
 		if (worldName == null || worldName.isEmpty())
 		{
 			return null;
@@ -495,7 +511,7 @@ public class EssentialsConf extends YamlConfiguration
 	{
 		return get(path);
 	}
-	
+
 	public void setProperty(final String path, final BigDecimal bigDecimal)
 	{
 		set(path, bigDecimal.toString());
@@ -522,14 +538,13 @@ public class EssentialsConf extends YamlConfiguration
 	{
 		return super.get(path, def);
 	}
-	
-	
+
 	public synchronized BigDecimal getBigDecimal(final String path, final BigDecimal def)
 	{
 		final String input = super.getString(path);
 		return toBigDecimal(input, def);
 	}
-	
+
 	public static BigDecimal toBigDecimal(final String input, final BigDecimal def)
 	{
 		if (input == null || input.isEmpty())
@@ -809,5 +824,4 @@ public class EssentialsConf extends YamlConfiguration
 	{
 		super.set(path, value);
 	}
-
 }

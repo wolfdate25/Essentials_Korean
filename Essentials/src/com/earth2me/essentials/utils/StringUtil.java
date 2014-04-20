@@ -6,11 +6,8 @@ import java.util.regex.Pattern;
 
 public class StringUtil
 {
-	private StringUtil()
-	{
-	}
-	private final static Pattern INVALIDFILECHARS = Pattern.compile("[^a-z0-9]");
-	private final static Pattern INVALIDCHARS = Pattern.compile("[^\t\n\r\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFFFC]");
+	private static final Pattern INVALIDFILECHARS = Pattern.compile("[^a-z0-9-]");
+	private static final Pattern INVALIDCHARS = Pattern.compile("[^\t\n\r\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFFFC]");
 
 	//Used to clean file names before saving to disk
 	public static String sanitizeFileName(final String name)
@@ -62,5 +59,42 @@ public class StringUtil
 			}
 		}
 		return buf.toString();
+	}
+	
+	public static String joinListSkip(String seperator, String skip, Object... list)
+	{
+		StringBuilder buf = new StringBuilder();
+		for (Object each : list)
+		{
+			if (each.toString().equalsIgnoreCase(skip)) {
+				continue;
+			}
+			
+			if (buf.length() > 0)
+			{
+				buf.append(seperator);
+			}
+
+			if (each instanceof Collection)
+			{
+				buf.append(joinListSkip(seperator, skip, ((Collection)each).toArray()));
+			}
+			else
+			{
+				try
+				{
+					buf.append(each.toString());
+				}
+				catch (Exception e)
+				{
+					buf.append(each.toString());
+				}
+			}
+		}
+		return buf.toString();
+	}
+	
+	private StringUtil()
+	{
 	}
 }

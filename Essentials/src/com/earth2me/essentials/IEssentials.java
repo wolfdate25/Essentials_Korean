@@ -7,9 +7,11 @@ import com.earth2me.essentials.metrics.Metrics;
 import com.earth2me.essentials.perm.PermissionsHandler;
 import com.earth2me.essentials.register.payment.Methods;
 import java.util.List;
+import java.util.UUID;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
@@ -23,7 +25,14 @@ public interface IEssentials extends Plugin
 
 	boolean onCommandEssentials(CommandSender sender, Command command, String commandLabel, String[] args, ClassLoader classLoader, String commandPath, String permissionPrefix, IEssentialsModule module);
 
+	@Deprecated
 	User getUser(Object base);
+	
+	User getUser(UUID base);
+	
+	User getUser(String base);
+	
+	User getUser(Player base);
 
 	I18n getI18n();
 
@@ -67,7 +76,7 @@ public interface IEssentials extends Plugin
 
 	AlternativeCommandsHandler getAlternativeCommandsHandler();
 
-	void showError(final CommandSender sender, final Throwable exception, final String commandLabel);
+	void showError(final CommandSource sender, final Throwable exception, final String commandLabel);
 
 	IItemDb getItemDb();
 

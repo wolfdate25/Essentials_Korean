@@ -1,7 +1,6 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import static com.earth2me.essentials.I18n.capitalCase;
 import com.earth2me.essentials.Trade.OverflowType;
 import com.earth2me.essentials.commands.NoChargeException;
@@ -9,11 +8,13 @@ import com.earth2me.essentials.craftbukkit.InventoryWorkaround;
 import com.earth2me.essentials.textreader.IText;
 import com.earth2me.essentials.textreader.KeywordReplacer;
 import com.earth2me.essentials.textreader.SimpleTextInput;
-import com.earth2me.essentials.utils.NumberUtil;
 import com.earth2me.essentials.utils.DateUtil;
+import com.earth2me.essentials.utils.NumberUtil;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.logging.Level;
+import net.ess3.api.IEssentials;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
@@ -40,13 +41,13 @@ public class Kit
 					BigDecimal costPrice = new Trade("kit-" + kitItem.toLowerCase(Locale.ENGLISH), ess).getCommandCost(user);
 					if (costPrice.signum() > 0)
 					{
-						cost = _("kitCost", NumberUtil.displayCurrency(costPrice, ess));
+						cost = tl("kitCost", NumberUtil.displayCurrency(costPrice, ess));
 					}
 					final Map<String, Object> kit = ess.getSettings().getKit(kitItem);
 
 					if (Kit.getNextUse(user, kitItem, kit) != 0)
 					{
-						name = _("kitDelay", name);
+						name = tl("kitDelay", name);
 					}
 
 					list.append(" ").append(name).append(cost);
@@ -56,7 +57,7 @@ public class Kit
 		}
 		catch (Exception ex)
 		{
-			throw new Exception(_("kitError"), ex);
+			throw new Exception(tl("kitError"), ex);
 		}
 
 	}
@@ -72,12 +73,12 @@ public class Kit
 		}
 		else if (nextUse < 0L)
 		{
-			user.sendMessage(_("kitOnce"));
+			user.sendMessage(tl("kitOnce"));
 			throw new NoChargeException();
 		}
 		else
 		{
-			user.sendMessage(_("kitTimed", DateUtil.formatDateDiff(nextUse)));
+			user.sendMessage(tl("kitTimed", DateUtil.formatDateDiff(nextUse)));
 			throw new NoChargeException();
 		}
 	}
@@ -99,7 +100,7 @@ public class Kit
 		}
 		catch (Exception e)
 		{
-			throw new Exception(_("kitError2"));
+			throw new Exception(tl("kitError2"));
 		}
 
 		// When was the last kit used?
@@ -133,11 +134,11 @@ public class Kit
 		}
 	}
 
-	public static List<String> getItems(final IEssentials ess, final User user, final Map<String, Object> kit) throws Exception
+	public static List<String> getItems(final IEssentials ess, final User user, final String kitName, final Map<String, Object> kit) throws Exception
 	{
 		if (kit == null)
 		{
-			throw new Exception(_("kitNotFound"));
+			throw new Exception(tl("kitNotFound"));
 		}
 		try
 		{
@@ -152,16 +153,16 @@ public class Kit
 						itemList.add(item.toString());
 						continue;
 					}
-					throw new Exception("Error parsing kit item: " + item.toString());
+					throw new Exception("Invalid kit item: " + item.toString());
 				}
 				return itemList;
 			}
-			throw new Exception("Error parsing kit: " + kitItems.toString());
+			throw new Exception("Invalid item list");
 		}
 		catch (Exception e)
 		{
-			ess.getLogger().log(Level.WARNING, e.getMessage());
-			throw new Exception(_("kitError2"), e);
+			ess.getLogger().log(Level.WARNING, "Error parsing kit " + kitName + ": " + e.getMessage());
+			throw new Exception(tl("kitError2"), e);
 		}
 	}
 
@@ -170,7 +171,7 @@ public class Kit
 		try
 		{
 			IText input = new SimpleTextInput(items);
-			IText output = new KeywordReplacer(input, user.getBase(), ess);
+			IText output = new KeywordReplacer(input, user.getSource(), ess);
 
 			boolean spew = false;
 			final boolean allowUnsafe = ess.getSettings().allowUnsafeEnchantments();
@@ -186,6 +187,11 @@ public class Kit
 
 				final String[] parts = kitItem.split(" +");
 				final ItemStack parseStack = ess.getItemDb().get(parts[0], parts.length > 1 ? Integer.parseInt(parts[1]) : 1);
+				
+				if (parseStack.getType() == Material.AIR) {
+					continue;
+				}
+				
 				final MetaItemStack metaStack = new MetaItemStack(parseStack);
 
 				if (parts.length > 2)
@@ -198,11 +204,11 @@ public class Kit
 				final boolean allowOversizedStacks = user.isAuthorized("essentials.oversizedstacks");
 				if (allowOversizedStacks)
 				{
-					overfilled = InventoryWorkaround.addOversizedItems(user.getInventory(), ess.getSettings().getOversizedStackSize(), metaStack.getItemStack());
+					overfilled = InventoryWorkaround.addOversizedItems(user.getBase().getInventory(), ess.getSettings().getOversizedStackSize(), metaStack.getItemStack());
 				}
 				else
 				{
-					overfilled = InventoryWorkaround.addItems(user.getInventory(), metaStack.getItemStack());
+					overfilled = InventoryWorkaround.addItems(user.getBase().getInventory(), metaStack.getItemStack());
 				}
 				for (ItemStack itemStack : overfilled.values())
 				{
@@ -217,17 +223,17 @@ public class Kit
 					spew = true;
 				}
 			}
-			user.updateInventory();
+			user.getBase().updateInventory();
 			if (spew)
 			{
-				user.sendMessage(_("kitInvFull"));
+				user.sendMessage(tl("kitInvFull"));
 			}
 		}
 		catch (Exception e)
 		{
-			user.updateInventory();
+			user.getBase().updateInventory();
 			ess.getLogger().log(Level.WARNING, e.getMessage());
-			throw new Exception(_("kitError2"), e);
+			throw new Exception(tl("kitError2"), e);
 		}
 	}
 }

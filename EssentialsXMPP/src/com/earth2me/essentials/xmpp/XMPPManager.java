@@ -124,7 +124,10 @@ public class XMPPManager extends Handler implements MessageListener, ChatManager
 		try
 		{
 			connection.connect();
-			connection.login(xmppuser, password);
+
+			connection.login(xmppuser, password, "Essentials-XMPP");
+			connection.sendPacket(new Presence(Presence.Type.available, "No one online.", 2, Presence.Mode.available));
+
 			connection.getRoster().setSubscriptionMode(SubscriptionMode.accept_all);
 			chatManager = connection.getChatManager();
 			chatManager.addChatListener(this);
@@ -153,6 +156,30 @@ public class XMPPManager extends Handler implements MessageListener, ChatManager
 			connection.disconnect(new Presence(Presence.Type.unavailable));
 		}
 
+	}
+
+	public final void updatePresence()
+	{
+		final int usercount;
+		final StringBuilder stringBuilder = new StringBuilder();
+
+		usercount = parent.getServer().getOnlinePlayers().length;
+
+		if (usercount == 0)
+		{
+			final String presenceMsg = "No one online.";
+			connection.sendPacket(new Presence(Presence.Type.available, presenceMsg, 2, Presence.Mode.dnd));
+		}
+		if (usercount == 1)
+		{
+			final String presenceMsg = "1 player online.";
+			connection.sendPacket(new Presence(Presence.Type.available, presenceMsg, 2, Presence.Mode.available));
+		}
+		if (usercount > 1)
+		{
+			stringBuilder.append(usercount).append(" players online.");
+			connection.sendPacket(new Presence(Presence.Type.available, stringBuilder.toString(), 2, Presence.Mode.available));
+		}
 	}
 
 	@Override

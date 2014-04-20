@@ -1,11 +1,13 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
-import com.earth2me.essentials.utils.StringUtil;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.utils.NumberUtil;
+import com.earth2me.essentials.utils.StringUtil;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.ess3.api.IEssentials;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -13,17 +15,18 @@ import org.bukkit.inventory.ItemStack;
 public class ItemDb implements IConf, net.ess3.api.IItemDb
 {
 	private final transient IEssentials ess;
+	private final transient Map<String, Integer> items = new HashMap<String, Integer>();
+	private final transient Map<ItemData, List<String>> names = new HashMap<ItemData, List<String>>();
+	private final transient Map<ItemData, String> primaryName = new HashMap<ItemData, String>();
+	private final transient Map<String, Short> durabilities = new HashMap<String, Short>();
+	private final transient ManagedFile file;
+	private final transient Pattern splitPattern = Pattern.compile("((.*)[:+',;.](\\d+))");
 
 	public ItemDb(final IEssentials ess)
 	{
 		this.ess = ess;
 		file = new ManagedFile("items.csv", ess);
 	}
-	private final transient Map<String, Integer> items = new HashMap<String, Integer>();
-	private final transient Map<ItemData, List<String>> names = new HashMap<ItemData, List<String>>();
-	private final transient Map<String, Short> durabilities = new HashMap<String, Short>();
-	private final transient ManagedFile file;
-	private final transient Pattern splitPattern = Pattern.compile("[:+',;.]");
 
 	@Override
 	public void reloadConfig()
@@ -38,6 +41,7 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 		durabilities.clear();
 		items.clear();
 		names.clear();
+		primaryName.clear();
 
 		for (String line : lines)
 		{
@@ -72,6 +76,7 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 				List<String> nameList = new ArrayList<String>();
 				nameList.add(itemName);
 				names.put(itemData, nameList);
+				primaryName.put(itemData, itemName);
 			}
 		}
 	}
@@ -90,27 +95,31 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 		int itemid = 0;
 		String itemname = null;
 		short metaData = 0;
-		String[] parts = splitPattern.split(id);
-		if (id.matches("^\\d+[:+',;.]\\d+$"))
+		Matcher parts = splitPattern.matcher(id);
+		if (parts.matches())
 		{
-			itemid = Integer.parseInt(parts[0]);
-			metaData = Short.parseShort(parts[1]);
+			itemname = parts.group(2);
+			metaData = Short.parseShort(parts.group(3));
+		}
+		else
+		{
+			itemname = id;
+		}
+
+		if (NumberUtil.isInt(itemname))
+		{
+			itemid = Integer.parseInt(itemname);
 		}
 		else if (NumberUtil.isInt(id))
 		{
 			itemid = Integer.parseInt(id);
 		}
-		else if (id.matches("^[^:+',;.]+[:+',;.]\\d+$"))
-		{
-			itemname = parts[0].toLowerCase(Locale.ENGLISH);
-			metaData = Short.parseShort(parts[1]);
-		}
 		else
 		{
-			itemname = id.toLowerCase(Locale.ENGLISH);
+			itemname = itemname.toLowerCase(Locale.ENGLISH);
 		}
 
-		if (itemname != null)
+		if (itemid < 1)
 		{
 			if (items.containsKey(itemname))
 			{
@@ -122,19 +131,32 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 			}
 			else if (Material.getMaterial(itemname.toUpperCase(Locale.ENGLISH)) != null)
 			{
-				itemid = Material.getMaterial(itemname.toUpperCase(Locale.ENGLISH)).getId();
-				metaData = 0;
+				Material bMaterial = Material.getMaterial(itemname.toUpperCase(Locale.ENGLISH));
+				itemid = bMaterial.getId();
 			}
 			else
 			{
-				throw new Exception(_("unknownItemName", id));
+				try
+				{
+					Material bMaterial = Bukkit.getUnsafe().getMaterialFromInternalName(itemname.toLowerCase(Locale.ENGLISH));
+					itemid = bMaterial.getId();
+				}
+				catch (Throwable throwable)
+				{
+					throw new Exception(tl("unknownItemName", itemname), throwable);
+				}
 			}
+		}
+
+		if (itemid < 1)
+		{
+			throw new Exception(tl("unknownItemName", itemname));
 		}
 
 		final Material mat = Material.getMaterial(itemid);
 		if (mat == null)
 		{
-			throw new Exception(_("unknownItemId", itemid));
+			throw new Exception(tl("unknownItemId", itemid));
 		}
 		final ItemStack retval = new ItemStack(mat);
 		retval.setAmount(mat.getMaxStackSize());
@@ -149,15 +171,15 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 
 		if (args.length < 1)
 		{
-			is.add(user.getItemInHand());
+			is.add(user.getBase().getItemInHand());
 		}
 		else if (args[0].equalsIgnoreCase("hand"))
 		{
-			is.add(user.getItemInHand());
+			is.add(user.getBase().getItemInHand());
 		}
 		else if (args[0].equalsIgnoreCase("inventory") || args[0].equalsIgnoreCase("invent") || args[0].equalsIgnoreCase("all"))
 		{
-			for (ItemStack stack : user.getInventory().getContents())
+			for (ItemStack stack : user.getBase().getInventory().getContents())
 			{
 				if (stack == null || stack.getType() == Material.AIR)
 				{
@@ -168,7 +190,7 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 		}
 		else if (args[0].equalsIgnoreCase("blocks"))
 		{
-			for (ItemStack stack : user.getInventory().getContents())
+			for (ItemStack stack : user.getBase().getInventory().getContents())
 			{
 				if (stack == null || stack.getTypeId() > 255 || stack.getType() == Material.AIR)
 				{
@@ -181,12 +203,12 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 		{
 			is.add(get(args[0]));
 		}
-		
+
 		if (is.isEmpty() || is.get(0).getType() == Material.AIR)
 		{
-			throw new Exception(_("itemSellAir"));
+			throw new Exception(tl("itemSellAir"));
 		}
-		
+
 		return is;
 	}
 
@@ -210,6 +232,23 @@ public class ItemDb implements IConf, net.ess3.api.IItemDb
 			nameList = nameList.subList(0, 14);
 		}
 		return StringUtil.joinList(", ", nameList);
+	}
+
+	@Override
+	public String name(ItemStack item)
+	{
+		ItemData itemData = new ItemData(item.getTypeId(), item.getDurability());
+		String name = primaryName.get(itemData);
+		if (name == null)
+		{
+			itemData = new ItemData(item.getTypeId(), (short)0);
+			name = primaryName.get(itemData);
+			if (name == null)
+			{
+				return null;
+			}
+		}
+		return name;
 	}
 
 

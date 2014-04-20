@@ -1,13 +1,13 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.NumberUtil;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 
 
@@ -35,7 +35,7 @@ public class Commandworth extends EssentialsCommand
 			{
 				if (stack.getAmount() > 0)
 				{
-					totalWorth = totalWorth.add(itemWorth(user.getBase(), user, stack, args));
+					totalWorth = totalWorth.add(itemWorth(user.getSource(), user, stack, args));
 					stack = stack.clone();
 					count++;
 					for (ItemStack zeroStack : is)
@@ -60,19 +60,18 @@ public class Commandworth extends EssentialsCommand
 		{
 			if (args.length > 0 && args[0].equalsIgnoreCase("blocks"))
 			{
-				user.sendMessage(_("totalSellableBlocks", type, NumberUtil.displayCurrency(totalWorth, ess)));
+				user.sendMessage(tl("totalSellableBlocks", type, NumberUtil.displayCurrency(totalWorth, ess)));
 			}
 			else
 			{
-				user.sendMessage(_("totalSellableAll", type, NumberUtil.displayCurrency(totalWorth, ess)));
+				user.sendMessage(tl("totalSellableAll", type, NumberUtil.displayCurrency(totalWorth, ess)));
 			}
 		}
 	}
 
 	@Override
-	public void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	public void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
-		String type = "";
 		if (args.length < 1)
 		{
 			throw new NotEnoughArgumentsException();
@@ -83,7 +82,7 @@ public class Commandworth extends EssentialsCommand
 		itemWorth(sender, null, stack, args);
 	}
 
-	private BigDecimal itemWorth(CommandSender sender, User user, ItemStack is, String[] args) throws Exception
+	private BigDecimal itemWorth(CommandSource sender, User user, ItemStack is, String[] args) throws Exception
 	{
 		int amount = 1;
 		if (user == null)
@@ -110,7 +109,7 @@ public class Commandworth extends EssentialsCommand
 
 		if (worth == null)
 		{
-			throw new Exception(_("itemCannotBeSold"));
+			throw new Exception(tl("itemCannotBeSold"));
 		}
 
 		if (amount < 0)
@@ -121,13 +120,13 @@ public class Commandworth extends EssentialsCommand
 		BigDecimal result = worth.multiply(BigDecimal.valueOf(amount));
 
 		sender.sendMessage(is.getDurability() != 0
-						   ? _("worthMeta",
+						   ? tl("worthMeta",
 							   is.getType().toString().toLowerCase(Locale.ENGLISH).replace("_", ""),
 							   is.getDurability(),
 							   NumberUtil.displayCurrency(result, ess),
 							   amount,
 							   NumberUtil.displayCurrency(worth, ess))
-						   : _("worth",
+						   : tl("worth",
 							   is.getType().toString().toLowerCase(Locale.ENGLISH).replace("_", ""),
 							   NumberUtil.displayCurrency(result, ess),
 							   amount,

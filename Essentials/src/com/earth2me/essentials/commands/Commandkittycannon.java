@@ -10,7 +10,7 @@ import org.bukkit.entity.Ocelot;
 // This command is not documented on the wiki #EasterEgg
 public class Commandkittycannon extends EssentialsCommand
 {
-	private static Random random = new Random();
+	private static final Random random = new Random();
 
 	public Commandkittycannon()
 	{
@@ -21,7 +21,7 @@ public class Commandkittycannon extends EssentialsCommand
 	protected void run(final Server server, final User user, final String commandLabel, final String[] args) throws Exception
 	{
 		final Mob cat = Mob.OCELOT;
-		final Ocelot ocelot = (Ocelot)cat.spawn(user.getWorld(), server, user.getEyeLocation());
+		final Ocelot ocelot = (Ocelot)cat.spawn(user.getWorld(), server, user.getBase().getEyeLocation());
 		if (ocelot == null)
 		{
 			return;
@@ -30,7 +30,7 @@ public class Commandkittycannon extends EssentialsCommand
 		ocelot.setCatType(Ocelot.Type.values()[i]);
 		ocelot.setTamed(true);
 		ocelot.setBaby();
-		ocelot.setVelocity(user.getEyeLocation().getDirection().multiply(2));
+		ocelot.setVelocity(user.getBase().getEyeLocation().getDirection().multiply(2));
 		ess.scheduleSyncDelayedTask(new Runnable()
 		{
 			@Override

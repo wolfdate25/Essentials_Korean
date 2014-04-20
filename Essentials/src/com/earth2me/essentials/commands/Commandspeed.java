@@ -1,10 +1,10 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import java.util.List;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 
@@ -16,7 +16,7 @@ public class Commandspeed extends EssentialsCommand
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length < 2)
 		{
@@ -40,7 +40,7 @@ public class Commandspeed extends EssentialsCommand
 		boolean isBypass = user.isAuthorized("essentials.speed.bypass");
 		if (args.length == 1)
 		{
-			isFly = flyPermCheck(user, user.isFlying());
+			isFly = flyPermCheck(user, user.getBase().isFlying());
 			speed = getMoveSpeed(args[0]);
 		}
 		else
@@ -53,26 +53,26 @@ public class Commandspeed extends EssentialsCommand
 				{
 					throw new PlayerNotFoundException();
 				}
-				speedOtherPlayers(server, user.getBase(), isFly, isBypass, speed, args[2]);
+				speedOtherPlayers(server, user.getSource(), isFly, isBypass, speed, args[2]);
 				return;
 			}
 		}
 
 		if (isFly)
 		{
-			user.setFlySpeed(getRealMoveSpeed(speed, isFly, isBypass));
-			user.sendMessage(_("moveSpeed", _("flying"), speed, user.getDisplayName()));
+			user.getBase().setFlySpeed(getRealMoveSpeed(speed, isFly, isBypass));
+			user.sendMessage(tl("moveSpeed", tl("flying"), speed, user.getDisplayName()));
 		}
 		else
 		{
-			user.setWalkSpeed(getRealMoveSpeed(speed, isFly, isBypass));
-			user.sendMessage(_("moveSpeed", _("walking"), speed, user.getDisplayName()));
+			user.getBase().setWalkSpeed(getRealMoveSpeed(speed, isFly, isBypass));
+			user.sendMessage(tl("moveSpeed", tl("walking"), speed, user.getDisplayName()));
 		}
 	}
 
-	private void speedOtherPlayers(final Server server, final CommandSender sender, final boolean isFly, final boolean isBypass, final float speed, final String name) throws PlayerNotFoundException
+	private void speedOtherPlayers(final Server server, final CommandSource sender, final boolean isFly, final boolean isBypass, final float speed, final String name) throws PlayerNotFoundException
 	{
-		boolean skipHidden = sender instanceof Player && !ess.getUser(sender).isAuthorized("essentials.vanish.interact");
+		boolean skipHidden = sender.isPlayer() && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.vanish.interact");
 		boolean foundUser = false;
 		final List<Player> matchedPlayers = server.matchPlayer(name);
 		for (Player matchPlayer : matchedPlayers)
@@ -86,12 +86,12 @@ public class Commandspeed extends EssentialsCommand
 			if (isFly)
 			{
 				matchPlayer.setFlySpeed(getRealMoveSpeed(speed, isFly, isBypass));
-				sender.sendMessage(_("moveSpeed", _("flying"), speed, matchPlayer.getDisplayName()));
+				sender.sendMessage(tl("moveSpeed", tl("flying"), speed, matchPlayer.getDisplayName()));
 			}
 			else
 			{
 				matchPlayer.setWalkSpeed(getRealMoveSpeed(speed, isFly, isBypass));
-				sender.sendMessage(_("moveSpeed", _("walking"), speed, matchPlayer.getDisplayName()));
+				sender.sendMessage(tl("moveSpeed", tl("walking"), speed, matchPlayer.getDisplayName()));
 			}
 		}
 		if (!foundUser)

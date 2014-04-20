@@ -1,6 +1,7 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.NumberUtil;
 import java.util.ArrayList;
@@ -8,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,34 +19,34 @@ public class Commandclearinventory extends EssentialsCommand
 	{
 		super("clearinventory");
 	}
-	static int BASE_AMOUNT = 100000;
-	static int EXTENDED_CAP = 8;
+	private static final int BASE_AMOUNT = 100000;
+	private static final int EXTENDED_CAP = 8;
 
 	@Override
 	public void run(Server server, User user, String commandLabel, String[] args) throws Exception
 	{
-		parseCommand(server, user.getBase(), args, user.isAuthorized("essentials.clearinventory.others"), user.isAuthorized("essentials.clearinventory.all"));
+		parseCommand(server, user.getSource(), args, user.isAuthorized("essentials.clearinventory.others"), user.isAuthorized("essentials.clearinventory.all") || user.isAuthorized("essentials.clearinventory.multiple"));
 	}
 
 	@Override
-	protected void run(Server server, CommandSender sender, String commandLabel, String[] args) throws Exception
+	protected void run(Server server, CommandSource sender, String commandLabel, String[] args) throws Exception
 	{
 		parseCommand(server, sender, args, true, true);
 	}
 
-	private void parseCommand(Server server, CommandSender sender, String[] args, boolean allowOthers, boolean allowAll) throws Exception
+	private void parseCommand(Server server, CommandSource sender, String[] args, boolean allowOthers, boolean allowAll) throws Exception
 	{
 		List<Player> players = new ArrayList<Player>();
 		int offset = 0;
 
-		if (sender instanceof Player)
+		if (sender.isPlayer())
 		{
-			players.add((Player)sender);
+			players.add(sender.getPlayer());
 		}
 
 		if (allowAll && args.length > 0 && args[0].contentEquals("*"))
 		{
-			sender.sendMessage(_("inventoryClearingFromAll"));
+			sender.sendMessage(tl("inventoryClearingFromAll"));
 			offset = 1;
 			players = Arrays.asList(server.getOnlinePlayers());
 		}
@@ -62,11 +62,11 @@ public class Commandclearinventory extends EssentialsCommand
 		}
 		for (Player player : players)
 		{
-			clearHandler(sender, player, args, offset, players.size() < EXTENDED_CAP);		
+			clearHandler(sender, player, args, offset, players.size() < EXTENDED_CAP);
 		}
 	}
 
-	protected void clearHandler(CommandSender sender, Player player, String[] args, int offset, boolean showExtended) throws Exception
+	protected void clearHandler(CommandSource sender, Player player, String[] args, int offset, boolean showExtended) throws Exception
 	{
 		short data = -1;
 		int type = -1;
@@ -103,7 +103,7 @@ public class Commandclearinventory extends EssentialsCommand
 		{
 			if (showExtended)
 			{
-				sender.sendMessage(_("inventoryClearingAllItems", player.getDisplayName()));
+				sender.sendMessage(tl("inventoryClearingAllItems", player.getDisplayName()));
 			}
 			player.getInventory().clear();
 		}
@@ -111,7 +111,7 @@ public class Commandclearinventory extends EssentialsCommand
 		{
 			if (showExtended)
 			{
-				sender.sendMessage(_("inventoryClearingAllArmor", player.getDisplayName()));
+				sender.sendMessage(tl("inventoryClearingAllArmor", player.getDisplayName()));
 			}
 			player.getInventory().clear();
 			player.getInventory().setArmorContents(null);
@@ -121,8 +121,9 @@ public class Commandclearinventory extends EssentialsCommand
 			if (data == -1) // data -1 means that all subtypes will be cleared
 			{
 				ItemStack stack = new ItemStack(type);
-				if (showExtended) {
-					sender.sendMessage(_("inventoryClearingAllStack", stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
+				if (showExtended)
+				{
+					sender.sendMessage(tl("inventoryClearingAllStack", stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
 				}
 				player.getInventory().clear(type, data);
 			}
@@ -133,22 +134,26 @@ public class Commandclearinventory extends EssentialsCommand
 				final int removedAmount = (BASE_AMOUNT - removedStack.getAmount());
 				if (removedAmount > 0 || showExtended)
 				{
-					sender.sendMessage(_("inventoryClearingStack", removedAmount, stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
+					sender.sendMessage(tl("inventoryClearingStack", removedAmount, stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
 				}
 			}
 			else
 			{
+				if (amount < 0)
+				{
+					amount = 1;
+				}
 				ItemStack stack = new ItemStack(type, amount, data);
 				if (player.getInventory().containsAtLeast(stack, amount))
 				{
-					sender.sendMessage(_("inventoryClearingStack", amount, stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
+					sender.sendMessage(tl("inventoryClearingStack", amount, stack.getType().toString().toLowerCase(Locale.ENGLISH), player.getDisplayName()));
 					player.getInventory().removeItem(stack);
 				}
 				else
 				{
 					if (showExtended)
 					{
-						sender.sendMessage(_("inventoryClearFail", player.getDisplayName(), amount, stack.getType().toString().toLowerCase(Locale.ENGLISH)));
+						sender.sendMessage(tl("inventoryClearFail", player.getDisplayName(), amount, stack.getType().toString().toLowerCase(Locale.ENGLISH)));
 					}
 				}
 			}

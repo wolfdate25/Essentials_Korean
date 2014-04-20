@@ -1,53 +1,31 @@
 package net.ess3.api.events;
 
-import com.earth2me.essentials.User;
+import net.ess3.api.IUser;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 
 
 /**
  * This handles common boilerplate for other StatusChangeEvents
  *
  */
-public class StatusChangeEvent extends Event implements Cancellable
+public class StatusChangeEvent extends StateChangeEvent implements Cancellable
 {
-	private static final HandlerList handlers = new HandlerList();
-	private boolean cancelled;
-	User affected;
-	User controller;
+	private boolean newValue;
 
-	public User getAffected()
+	public StatusChangeEvent(IUser affected, IUser controller, boolean value)
 	{
-		return this.affected;
+		super(affected, controller);
+		this.newValue = value;
 	}
 
-	public User getController()
+	public StatusChangeEvent(boolean isAsync, IUser affected, IUser controller, boolean value)
 	{
-		return controller;
+		super(isAsync, affected, controller);
+		this.newValue = value;
 	}
 
-	@Override
-	public HandlerList getHandlers()
+	public boolean getValue()
 	{
-		return handlers;
+		return newValue;
 	}
-
-	public static HandlerList getHandlerList()
-	{
-		return handlers;
-	}
-
-	@Override
-	public boolean isCancelled()
-	{
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean cancelled)
-	{
-		this.cancelled = cancelled;
-	}
-
 }

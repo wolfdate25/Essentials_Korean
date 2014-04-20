@@ -1,10 +1,11 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.api.IWarps;
-import com.earth2me.essentials.utils.StringUtil;
 import com.earth2me.essentials.utils.NumberUtil;
+import com.earth2me.essentials.utils.StringUtil;
+import net.ess3.api.InvalidWorldException;
 import org.bukkit.Location;
 import org.bukkit.Server;
 
@@ -26,7 +27,7 @@ public class Commandsetwarp extends EssentialsCommand
 
 		if (NumberUtil.isInt(args[0]) || args[0].isEmpty())
 		{
-			throw new NoSuchFieldException(_("invalidWarpName"));
+			throw new NoSuchFieldException(tl("invalidWarpName"));
 		}
 
 		final Location loc = user.getLocation();
@@ -37,7 +38,10 @@ public class Commandsetwarp extends EssentialsCommand
 		{
 			warpLoc = warps.getWarp(args[0]);
 		}
-		catch (Exception ex)
+		catch (WarpNotFoundException ex)
+		{
+		}
+		catch (InvalidWorldException ex)
 		{
 		}
 
@@ -47,8 +51,8 @@ public class Commandsetwarp extends EssentialsCommand
 		}
 		else
 		{
-			throw new Exception(_("warpOverwrite"));
+			throw new Exception(tl("warpOverwrite"));
 		}
-		user.sendMessage(_("warpSet", args[0]));
+		user.sendMessage(tl("warpSet", args[0]));
 	}
 }

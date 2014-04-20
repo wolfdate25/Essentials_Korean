@@ -1,6 +1,6 @@
 package com.earth2me.essentials.spawn;
 
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.Kit;
 import com.earth2me.essentials.OfflinePlayer;
 import com.earth2me.essentials.User;
@@ -24,9 +24,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class EssentialsSpawnPlayerListener implements Listener
 {
+	private static final Logger LOGGER = Bukkit.getLogger();
 	private final transient IEssentials ess;
 	private final transient SpawnStorage spawns;
-	private static final Logger LOGGER = Bukkit.getLogger();
 
 	public EssentialsSpawnPlayerListener(final IEssentials ess, final SpawnStorage spawns)
 	{
@@ -47,7 +47,7 @@ public class EssentialsSpawnPlayerListener implements Listener
 		if (ess.getSettings().getRespawnAtHome())
 		{
 			Location home;
-			final Location bed = user.getBedSpawnLocation();
+			final Location bed = user.getBase().getBedSpawnLocation();
 			if (bed != null)
 			{
 				home = bed;
@@ -101,14 +101,14 @@ public class EssentialsSpawnPlayerListener implements Listener
 			@Override
 			public void run()
 			{
-				if (!user.isOnline()) {
+				if (!user.getBase().isOnline()) {
 					return;
 				}
 
 				//This method allows for multiple line player announce messages using multiline yaml syntax #EasterEgg
 				if (ess.getSettings().getAnnounceNewPlayers())
 				{
-					final IText output = new KeywordReplacer(ess.getSettings().getAnnounceNewPlayerFormat(), user.getBase(), ess);
+					final IText output = new KeywordReplacer(ess.getSettings().getAnnounceNewPlayerFormat(), user.getSource(), ess);
 					final SimpleTextPager pager = new SimpleTextPager(output);
 
 					for (String line : pager.getLines())
@@ -123,7 +123,7 @@ public class EssentialsSpawnPlayerListener implements Listener
 					try
 					{
 						final Map<String, Object> kit = ess.getSettings().getKit(kitName.toLowerCase(Locale.ENGLISH));
-						final List<String> items = Kit.getItems(ess, user, kit);
+						final List<String> items = Kit.getItems(ess, user, kitName, kit);
 						Kit.expandItems(ess, user, items);
 					}
 					catch (Exception ex)
@@ -165,7 +165,7 @@ public class EssentialsSpawnPlayerListener implements Listener
 			}
 			catch (Exception ex)
 			{
-				Bukkit.getLogger().log(Level.WARNING, _("teleportNewPlayerError"), ex);
+				Bukkit.getLogger().log(Level.WARNING, tl("teleportNewPlayerError"), ex);
 			}
 		}
 	}

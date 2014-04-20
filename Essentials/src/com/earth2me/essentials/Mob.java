@@ -1,6 +1,6 @@
 package com.earth2me.essentials;
 
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,7 +9,6 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 
 
 // Suffixes can be appended on the end of a mob name to make it plural
@@ -30,7 +29,7 @@ public enum Mob
 	SPIDER("Spider", Enemies.ENEMY, EntityType.SPIDER),
 	SQUID("Squid", Enemies.FRIENDLY, EntityType.SQUID),
 	ZOMBIE("Zombie", Enemies.ENEMY, EntityType.ZOMBIE),
-	WOLF("Wolf", Enemies.NEUTRAL, EntityType.WOLF),
+	WOLF("Wolf", Enemies.NEUTRAL, "", EntityType.WOLF),
 	CAVESPIDER("CaveSpider", Enemies.ENEMY, EntityType.CAVE_SPIDER),
 	ENDERMAN("Enderman", Enemies.ENEMY, "", EntityType.ENDERMAN),
 	SILVERFISH("Silverfish", Enemies.ENEMY, "", EntityType.SILVERFISH),
@@ -54,7 +53,7 @@ public enum Mob
 	MINECART_MOB_SPAWNER("SpawnerMinecart", Enemies.NEUTRAL, EntityType.MINECART_MOB_SPAWNER),
 	ENDERCRYSTAL("EnderCrystal", Enemies.NEUTRAL, EntityType.ENDER_CRYSTAL),
 	EXPERIENCEORB("ExperienceOrb", Enemies.NEUTRAL, EntityType.EXPERIENCE_ORB);
-	public static final Logger logger = Logger.getLogger("Minecraft");
+	public static final Logger logger = Logger.getLogger("Essentials");
 
 	private Mob(String n, Enemies en, String s, EntityType type)
 	{
@@ -96,7 +95,7 @@ public enum Mob
 		final Entity entity = world.spawn(loc, (Class<? extends Entity>)this.bukkitType.getEntityClass());
 		if (entity == null)
 		{
-			logger.log(Level.WARNING, _("unableToSpawnMob"));
+			logger.log(Level.WARNING, tl("unableToSpawnMob"));
 			throw new MobException();
 		}
 		return entity;
@@ -130,6 +129,7 @@ public enum Mob
 	{
 		return bukkitMap.get(type);
 	}
+
 
 	public static class MobException extends Exception
 	{

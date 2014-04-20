@@ -1,8 +1,8 @@
 package com.earth2me.essentials.signs;
 
-import net.ess3.api.IEssentials;
 import com.earth2me.essentials.*;
 import java.util.List;
+import net.ess3.api.IEssentials;
 
 
 public class SignSpawnmob extends EssentialsSign
@@ -30,7 +30,7 @@ public class SignSpawnmob extends EssentialsSign
 		{
 			List<String> mobParts = SpawnMob.mobParts(sign.getLine(2));
 			List<String> mobData = SpawnMob.mobData(sign.getLine(2));
-			SpawnMob.spawnmob(ess, ess.getServer(), player.getBase(), player, mobParts, mobData, Integer.parseInt(sign.getLine(1)));
+			SpawnMob.spawnmob(ess, ess.getServer(), player.getSource(), player, mobParts, mobData, Integer.parseInt(sign.getLine(1)));
 		}
 		catch (Exception ex)
 		{

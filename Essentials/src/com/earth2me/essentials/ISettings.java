@@ -29,6 +29,10 @@ public interface ISettings extends IConf
 	String getChatFormat(String group);
 
 	int getChatRadius();
+	
+	char getChatShout();
+	
+	char getChatQuestion();
 
 	BigDecimal getCommandCost(IEssentialsCommand cmd);
 
@@ -79,6 +83,8 @@ public interface ISettings extends IConf
 	int getSpawnMobLimit();
 
 	BigDecimal getStartingBalance();
+
+	boolean isTeleportSafetyEnabled();
 
 	double getTeleportCooldown();
 
@@ -195,6 +201,16 @@ public interface ISettings extends IConf
 	Map<String, Object> getListGroupConfig();
 
 	int getMaxNickLength();
-	
+
 	int getMaxUserCacheCount();
+
+	boolean allowSilentJoinQuit();
+
+	boolean isCustomJoinMessage();
+
+	String getCustomJoinMessage();
+
+	boolean isCustomQuitMessage();
+
+	String getCustomQuitMessage();
 }

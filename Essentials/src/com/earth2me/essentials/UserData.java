@@ -1,12 +1,14 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
-import com.earth2me.essentials.utils.StringUtil;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.utils.NumberUtil;
+import com.earth2me.essentials.utils.StringUtil;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.*;
+import net.ess3.api.IEssentials;
+import net.ess3.api.InvalidWorldException;
+import net.ess3.api.MaxMoneyException;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -16,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 public abstract class UserData extends PlayerExtension implements IConf
 {
 	protected final transient IEssentials ess;
-	private final EssentialsConf config;
+	private final EssentialsUserConf config;
 	private final File folder;
 
 	protected UserData(Player base, IEssentials ess)
@@ -28,14 +30,27 @@ public abstract class UserData extends PlayerExtension implements IConf
 		{
 			folder.mkdirs();
 		}
-		config = new EssentialsConf(new File(folder, StringUtil.sanitizeFileName(base.getName()) + ".yml"));
+
+		String filename;
+		try
+		{
+			filename = base.getUniqueId().toString();
+		}
+		catch (Throwable ex)
+		{
+			ess.getLogger().warning("Falling back to old username system for " + base.getName());
+			filename = base.getName();
+		}
+
+		config = new EssentialsUserConf(base.getName(), base.getUniqueId(), new File(folder, filename + ".yml"));
 		reloadConfig();
 	}
 
 	public final void reset()
 	{
+		config.forceSave();
 		config.getFile().delete();
-		ess.getUserMap().removeUser(this.getName());
+		ess.getUserMap().removeUser(this.getBase().getName());
 	}
 
 	@Override
@@ -69,6 +84,7 @@ public abstract class UserData extends PlayerExtension implements IConf
 		nickname = _getNickname();
 		ignoredPlayers = _getIgnoredPlayers();
 		logoutLocation = _getLogoutLocation();
+		lastAccountName = _getLastAccountName();
 	}
 	private BigDecimal money;
 
@@ -98,7 +114,7 @@ public abstract class UserData extends PlayerExtension implements IConf
 		return money;
 	}
 
-	public void setMoney(BigDecimal value)
+	public void setMoney(BigDecimal value, boolean throwError) throws MaxMoneyException
 	{
 		money = value;
 		BigDecimal maxMoney = ess.getSettings().getMaxMoney();
@@ -106,6 +122,10 @@ public abstract class UserData extends PlayerExtension implements IConf
 		if (money.compareTo(maxMoney) > 0)
 		{
 			money = maxMoney;
+			if (throwError)
+			{
+				throw new MaxMoneyException();
+			}
 		}
 		if (money.compareTo(minMoney) < 0)
 		{
@@ -133,7 +153,10 @@ public abstract class UserData extends PlayerExtension implements IConf
 			{
 				search = getHomes().get(Integer.parseInt(search) - 1);
 			}
-			catch (Exception e)
+			catch (NumberFormatException e)
+			{
+			}
+			catch (IndexOutOfBoundsException e)
 			{
 			}
 		}
@@ -143,27 +166,31 @@ public abstract class UserData extends PlayerExtension implements IConf
 	public Location getHome(String name) throws Exception
 	{
 		String search = getHomeName(name);
-		return config.getLocation("homes." + search, getServer());
+		return config.getLocation("homes." + search, this.getBase().getServer());
 	}
 
 	public Location getHome(final Location world)
 	{
 		try
 		{
+			if (getHomes().isEmpty())
+			{
+				return null;
+			}
 			Location loc;
 			for (String home : getHomes())
 			{
-				loc = config.getLocation("homes." + home, getServer());
+				loc = config.getLocation("homes." + home, this.getBase().getServer());
 				if (world.getWorld() == loc.getWorld())
 				{
 					return loc;
 				}
 
 			}
-			loc = config.getLocation("homes." + getHomes().get(0), getServer());
+			loc = config.getLocation("homes." + getHomes().get(0), this.getBase().getServer());
 			return loc;
 		}
-		catch (Exception ex)
+		catch (InvalidWorldException ex)
 		{
 			return null;
 		}
@@ -198,7 +225,7 @@ public abstract class UserData extends PlayerExtension implements IConf
 		}
 		else
 		{
-			throw new Exception(_("invalidHome", search));
+			throw new Exception(tl("invalidHome", search));
 		}
 	}
 
@@ -312,9 +339,9 @@ public abstract class UserData extends PlayerExtension implements IConf
 	{
 		try
 		{
-			return config.getLocation("lastlocation", getServer());
+			return config.getLocation("lastlocation", this.getBase().getServer());
 		}
-		catch (Exception e)
+		catch (InvalidWorldException e)
 		{
 			return null;
 		}
@@ -341,9 +368,9 @@ public abstract class UserData extends PlayerExtension implements IConf
 	{
 		try
 		{
-			return config.getLocation("logoutlocation", getServer());
+			return config.getLocation("logoutlocation", this.getBase().getServer());
 		}
-		catch (Exception e)
+		catch (InvalidWorldException e)
 		{
 			return null;
 		}
@@ -476,7 +503,6 @@ public abstract class UserData extends PlayerExtension implements IConf
 		config.setProperty("teleportenabled", set);
 		config.save();
 	}
-
 	private List<String> ignoredPlayers;
 
 	public List<String> _getIgnoredPlayers()
@@ -725,18 +751,11 @@ public abstract class UserData extends PlayerExtension implements IConf
 		return afk;
 	}
 
-	public void setAfk(boolean set)
+	public void _setAfk(boolean set)
 	{
 		afk = set;
 		config.setProperty("afk", set);
 		config.save();
-	}
-
-	public boolean toggleAfk()
-	{
-		boolean ret = !isAfk();
-		setAfk(ret);
-		return ret;
 	}
 	private boolean newplayer;
 	private String geolocation;
@@ -793,6 +812,25 @@ public abstract class UserData extends PlayerExtension implements IConf
 	public boolean isNPC()
 	{
 		return isNPC;
+	}
+	private String lastAccountName = null;
+
+	public String getLastAccountName()
+	{
+		return lastAccountName;
+	}
+
+	public String _getLastAccountName()
+	{
+		return config.getString("lastAccountName", null);
+	}
+
+	public void setLastAccountName(String lastAccountName)
+	{
+		this.lastAccountName = lastAccountName;
+		config.setProperty("lastAccountName", lastAccountName);
+		config.save();
+		ess.getUserMap().trackUUID(base.getUniqueId(), lastAccountName);
 	}
 
 	public void setNPC(boolean set)

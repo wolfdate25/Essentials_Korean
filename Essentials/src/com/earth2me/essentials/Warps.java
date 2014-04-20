@@ -1,22 +1,22 @@
 package com.earth2me.essentials;
 
-import com.earth2me.essentials.utils.StringUtil;
-import static com.earth2me.essentials.I18n._;
-import net.ess3.api.InvalidNameException;
-import net.ess3.api.InvalidWorldException;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.commands.WarpNotFoundException;
+import com.earth2me.essentials.utils.StringUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.InvalidNameException;
+import net.ess3.api.InvalidWorldException;
 import org.bukkit.Location;
 import org.bukkit.Server;
 
 
 public class Warps implements IConf, net.ess3.api.IWarps
 {
-	private static final Logger logger = Logger.getLogger("Minecraft");
+	private static final Logger logger = Logger.getLogger("Essentials");
 	private final Map<StringIgnoreCase, EssentialsConf> warpPoints = new HashMap<StringIgnoreCase, EssentialsConf>();
 	private final File warpsFolder;
 	private final Server server;
@@ -71,7 +71,7 @@ public class Warps implements IConf, net.ess3.api.IWarps
 			File confFile = new File(warpsFolder, filename + ".yml");
 			if (confFile.exists())
 			{
-				throw new Exception(_("similarWarpExist"));
+				throw new Exception(tl("similarWarpExist"));
 			}
 			conf = new EssentialsConf(confFile);
 			warpPoints.put(new StringIgnoreCase(name), conf);
@@ -84,7 +84,7 @@ public class Warps implements IConf, net.ess3.api.IWarps
 		}
 		catch (IOException ex)
 		{
-			throw new IOException(_("invalidWarpName"));
+			throw new IOException(tl("invalidWarpName"));
 		}
 	}
 
@@ -94,11 +94,11 @@ public class Warps implements IConf, net.ess3.api.IWarps
 		EssentialsConf conf = warpPoints.get(new StringIgnoreCase(name));
 		if (conf == null)
 		{
-			throw new Exception(_("warpNotExist"));
+			throw new Exception(tl("warpNotExist"));
 		}
 		if (!conf.getFile().delete())
 		{
-			throw new Exception(_("warpDeleteError"));
+			throw new Exception(tl("warpDeleteError"));
 		}
 		warpPoints.remove(new StringIgnoreCase(name));
 	}
@@ -127,7 +127,7 @@ public class Warps implements IConf, net.ess3.api.IWarps
 					}
 					catch (Exception ex)
 					{
-						logger.log(Level.WARNING, _("loadWarpError", filename), ex);
+						logger.log(Level.WARNING, tl("loadWarpError", filename), ex);
 					}
 				}
 			}

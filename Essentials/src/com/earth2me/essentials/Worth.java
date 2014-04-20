@@ -1,18 +1,18 @@
 package com.earth2me.essentials;
 
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.commands.NotEnoughArgumentsException;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.logging.Logger;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
 
 public class Worth implements IConf
 {
-	private static final Logger logger = Logger.getLogger("Minecraft");
 	private final EssentialsConf config;
 
 	public Worth(File dataFolder)
@@ -26,15 +26,49 @@ public class Worth implements IConf
 	{
 		String itemname = itemStack.getType().toString().toLowerCase(Locale.ENGLISH).replace("_", "");
 		BigDecimal result;
+
+		//First check for matches with item name
 		result = config.getBigDecimal("worth." + itemname + "." + itemStack.getDurability(), BigDecimal.ONE.negate());
 		if (result.signum() < 0)
 		{
-			result = config.getBigDecimal("worth." + itemname + ".0", BigDecimal.ONE.negate());
+			final ConfigurationSection itemNameMatch = config.getConfigurationSection("worth." + itemname);
+			if (itemNameMatch != null && itemNameMatch.getKeys(false).size() == 1)
+			{
+				result = config.getBigDecimal("worth." + itemname + ".0", BigDecimal.ONE.negate());
+			}
+		}
+		if (result.signum() < 0)
+		{
+			result = config.getBigDecimal("worth." + itemname + ".*", BigDecimal.ONE.negate());
 		}
 		if (result.signum() < 0)
 		{
 			result = config.getBigDecimal("worth." + itemname, BigDecimal.ONE.negate());
 		}
+
+		//Now we should check for item ID
+		if (result.signum() < 0)
+		{
+			result = config.getBigDecimal("worth." + itemStack.getTypeId() + "." + itemStack.getDurability(), BigDecimal.ONE.negate());
+		}
+		if (result.signum() < 0)
+		{
+			final ConfigurationSection itemNumberMatch = config.getConfigurationSection("worth." + itemStack.getTypeId());
+			if (itemNumberMatch != null && itemNumberMatch.getKeys(false).size() == 1)
+			{
+				result = config.getBigDecimal("worth." + itemStack.getTypeId() + ".0", BigDecimal.ONE.negate());
+			}
+		}
+		if (result.signum() < 0)
+		{
+			result = config.getBigDecimal("worth." + itemStack.getTypeId() + ".*", BigDecimal.ONE.negate());
+		}
+		if (result.signum() < 0)
+		{
+			result = config.getBigDecimal("worth." + itemStack.getTypeId(), BigDecimal.ONE.negate());
+		}
+
+		//This is to match the old worth syntax
 		if (result.signum() < 0)
 		{
 			result = config.getBigDecimal("worth-" + itemStack.getTypeId(), BigDecimal.ONE.negate());
@@ -50,17 +84,19 @@ public class Worth implements IConf
 	{
 		if (is == null || is.getType() == Material.AIR)
 		{
-			throw new Exception(_("itemSellAir"));
+			throw new Exception(tl("itemSellAir"));
 		}
 		int id = is.getTypeId();
 		int amount = 0;
 
 		if (args.length > 1)
 		{
-			try {
+			try
+			{
 				amount = Integer.parseInt(args[1].replaceAll("[^0-9]", ""));
 			}
-			catch (NumberFormatException ex) {
+			catch (NumberFormatException ex)
+			{
 				throw new NotEnoughArgumentsException(ex);
 			}
 			if (args[1].startsWith("-"))
@@ -74,11 +110,11 @@ public class Worth implements IConf
 
 		if (requireStack && !stack)
 		{
-			throw new Exception(_("itemMustBeStacked"));
+			throw new Exception(tl("itemMustBeStacked"));
 		}
 
 		int max = 0;
-		for (ItemStack s : user.getInventory().getContents())
+		for (ItemStack s : user.getBase().getInventory().getContents())
 		{
 			if (s == null || !s.isSimilar(is))
 			{
@@ -104,9 +140,9 @@ public class Worth implements IConf
 		{
 			if (!isBulkSell)
 			{
-				user.sendMessage(_("itemNotEnough2"));
-				user.sendMessage(_("itemNotEnough3"));
-				throw new Exception(_("itemNotEnough1"));
+				user.sendMessage(tl("itemNotEnough2"));
+				user.sendMessage(tl("itemNotEnough3"));
+				throw new Exception(tl("itemNotEnough1"));
 			}
 			else
 			{

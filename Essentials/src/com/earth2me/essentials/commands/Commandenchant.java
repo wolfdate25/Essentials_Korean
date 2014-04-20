@@ -1,7 +1,7 @@
 package com.earth2me.essentials.commands;
 
 import com.earth2me.essentials.Enchantments;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.MetaItemStack;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.StringUtil;
@@ -26,10 +26,10 @@ public class Commandenchant extends EssentialsCommand
 	@Override
 	protected void run(final Server server, final User user, final String commandLabel, final String[] args) throws Exception
 	{
-		final ItemStack stack = user.getItemInHand();
+		final ItemStack stack = user.getBase().getItemInHand();
 		if (stack == null || stack.getType() == Material.AIR)
 		{
-			throw new Exception(_("nothingInHand"));
+			throw new Exception(tl("nothingInHand"));
 		}
 		if (args.length == 0)
 		{
@@ -43,7 +43,7 @@ public class Commandenchant extends EssentialsCommand
 					//enchantmentslist.add(enchantmentName);
 				}
 			}
-			throw new NotEnoughArgumentsException(_("enchantments", StringUtil.joinList(enchantmentslist.toArray())));
+			throw new NotEnoughArgumentsException(tl("enchantments", StringUtil.joinList(enchantmentslist.toArray())));
 		}
 
 		int level = -1;
@@ -63,18 +63,18 @@ public class Commandenchant extends EssentialsCommand
 		
 		final MetaItemStack metaStack = new MetaItemStack(stack);
 		final Enchantment enchantment = metaStack.getEnchantment(user, args[0]);
-		metaStack.addEnchantment(user.getBase(), allowUnsafe, enchantment, level);
-		user.getInventory().setItemInHand(metaStack.getItemStack());
+		metaStack.addEnchantment(user.getSource(), allowUnsafe, enchantment, level);
+		user.getBase().getInventory().setItemInHand(metaStack.getItemStack());
 		
-		user.updateInventory();
+		user.getBase().updateInventory();
 		final String enchantmentName = enchantment.getName().toLowerCase(Locale.ENGLISH);
 		if (level == 0)
 		{
-			user.sendMessage(_("enchantmentRemoved", enchantmentName.replace('_', ' ')));
+			user.sendMessage(tl("enchantmentRemoved", enchantmentName.replace('_', ' ')));
 		}
 		else
 		{
-			user.sendMessage(_("enchantmentApplied", enchantmentName.replace('_', ' ')));
+			user.sendMessage(tl("enchantmentApplied", enchantmentName.replace('_', ' ')));
 		}
 	}
 }

@@ -1,6 +1,6 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import org.bukkit.Server;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -26,29 +26,27 @@ public class Commandtpo extends EssentialsCommand
 			if (user.getWorld() != player.getWorld() && ess.getSettings().isWorldTeleportPermissions()
 				&& !user.isAuthorized("essentials.worlds." + player.getWorld().getName()))
 			{
-				throw new Exception(_("noPerm", "essentials.worlds." + player.getWorld().getName()));
+				throw new Exception(tl("noPerm", "essentials.worlds." + player.getWorld().getName()));
 			}
-			user.sendMessage(_("teleporting"));
 			user.getTeleport().now(player.getBase(), false, TeleportCause.COMMAND);
 			break;
 
 		default:
 			if (!user.isAuthorized("essentials.tp.others"))
 			{
-				throw new Exception(_("noPerm", "essentials.tp.others"));
+				throw new Exception(tl("noPerm", "essentials.tp.others"));
 			}
-			user.sendMessage(_("teleporting"));
 			final User target = getPlayer(server, user, args, 0);
 			final User toPlayer = getPlayer(server, user, args, 1);
 
 			if (target.getWorld() != toPlayer.getWorld() && ess.getSettings().isWorldTeleportPermissions()
 				&& !user.isAuthorized("essentials.worlds." + toPlayer.getWorld().getName()))
 			{
-				throw new Exception(_("noPerm", "essentials.worlds." + toPlayer.getWorld().getName()));
+				throw new Exception(tl("noPerm", "essentials.worlds." + toPlayer.getWorld().getName()));
 			}
 
 			target.getTeleport().now(toPlayer.getBase(), false, TeleportCause.COMMAND);
-			target.sendMessage(_("teleportAtoB", user.getDisplayName(), toPlayer.getDisplayName()));
+			target.sendMessage(tl("teleportAtoB", user.getDisplayName(), toPlayer.getDisplayName()));
 			break;
 		}
 	}

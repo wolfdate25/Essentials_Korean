@@ -1,6 +1,7 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.NumberUtil;
 import java.util.HashMap;
@@ -9,8 +10,6 @@ import java.util.Locale;
 import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
 
 
@@ -22,7 +21,7 @@ public class Commandrecipe extends EssentialsCommand
 	}
 
 	@Override
-	public void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	public void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		if (args.length < 1)
 		{
@@ -40,23 +39,23 @@ public class Commandrecipe extends EssentialsCommand
 			}
 			else
 			{
-				throw new Exception(_("invalidNumber"));
+				throw new Exception(tl("invalidNumber"));
 			}
 		}
 
 		final List<Recipe> recipesOfType = ess.getServer().getRecipesFor(itemType);
 		if (recipesOfType.size() < 1)
 		{
-			throw new Exception(_("recipeNone", getMaterialName(itemType)));
+			throw new Exception(tl("recipeNone", getMaterialName(itemType)));
 		}
 
 		if (recipeNo < 0 || recipeNo >= recipesOfType.size())
 		{
-			throw new Exception(_("recipeBadIndex"));
+			throw new Exception(tl("recipeBadIndex"));
 		}
 
 		final Recipe selectedRecipe = recipesOfType.get(recipeNo);
-		sender.sendMessage(_("recipe", getMaterialName(itemType), recipeNo + 1, recipesOfType.size()));
+		sender.sendMessage(tl("recipe", getMaterialName(itemType), recipeNo + 1, recipesOfType.size()));
 
 		if (selectedRecipe instanceof FurnaceRecipe)
 		{
@@ -73,25 +72,25 @@ public class Commandrecipe extends EssentialsCommand
 
 		if (recipesOfType.size() > 1 && args.length == 1)
 		{
-			sender.sendMessage(_("recipeMore", commandLabel, args[0], getMaterialName(itemType)));
+			sender.sendMessage(tl("recipeMore", commandLabel, args[0], getMaterialName(itemType)));
 		}
 	}
 
-	public void furnaceRecipe(final CommandSender sender, final FurnaceRecipe recipe)
+	public void furnaceRecipe(final CommandSource sender, final FurnaceRecipe recipe)
 	{
-		sender.sendMessage(_("recipeFurnace", getMaterialName(recipe.getInput())));
+		sender.sendMessage(tl("recipeFurnace", getMaterialName(recipe.getInput())));
 	}
 
-	public void shapedRecipe(final CommandSender sender, final ShapedRecipe recipe)
+	public void shapedRecipe(final CommandSource sender, final ShapedRecipe recipe)
 	{
 		final Map<Character, ItemStack> recipeMap = recipe.getIngredientMap();
 
-		if (sender instanceof Player)
+		if (sender.isPlayer())
 		{
-			final User user = ess.getUser(sender);
-			user.closeInventory();
+			final User user = ess.getUser(sender.getPlayer());
+			user.getBase().closeInventory();
 			user.setRecipeSee(true);
-			final InventoryView view = user.openWorkbench(null, true);
+			final InventoryView view = user.getBase().openWorkbench(null, true);
 			final String[] recipeShape = recipe.getShape();
 			final Map<Character, ItemStack> ingredientMap = recipe.getIngredientMap();
 			for (int j = 0; j < recipeShape.length; j++)
@@ -129,27 +128,27 @@ public class Commandrecipe extends EssentialsCommand
 					materials[j][k] = item == null ? null : item.getType();
 				}
 			}
-			sender.sendMessage(_("recipeGrid", colorMap.get(materials[0][0]), colorMap.get(materials[0][1]), colorMap.get(materials[0][2])));
-			sender.sendMessage(_("recipeGrid", colorMap.get(materials[1][0]), colorMap.get(materials[1][1]), colorMap.get(materials[1][2])));
-			sender.sendMessage(_("recipeGrid", colorMap.get(materials[2][0]), colorMap.get(materials[2][1]), colorMap.get(materials[2][2])));
+			sender.sendMessage(tl("recipeGrid", colorMap.get(materials[0][0]), colorMap.get(materials[0][1]), colorMap.get(materials[0][2])));
+			sender.sendMessage(tl("recipeGrid", colorMap.get(materials[1][0]), colorMap.get(materials[1][1]), colorMap.get(materials[1][2])));
+			sender.sendMessage(tl("recipeGrid", colorMap.get(materials[2][0]), colorMap.get(materials[2][1]), colorMap.get(materials[2][2])));
 
 			StringBuilder s = new StringBuilder();
 			for (Material items : colorMap.keySet().toArray(new Material[colorMap.size()]))
 			{
-				s.append(_("recipeGridItem", colorMap.get(items), getMaterialName(items)));
+				s.append(tl("recipeGridItem", colorMap.get(items), getMaterialName(items)));
 			}
-			sender.sendMessage(_("recipeWhere", s.toString()));
+			sender.sendMessage(tl("recipeWhere", s.toString()));
 		}
 	}
 
-	public void shapelessRecipe(final CommandSender sender, final ShapelessRecipe recipe)
+	public void shapelessRecipe(final CommandSource sender, final ShapelessRecipe recipe)
 	{
 		final List<ItemStack> ingredients = recipe.getIngredientList();
-		if (sender instanceof Player)
+		if (sender.isPlayer())
 		{
-			final User user = ess.getUser(sender);
+			final User user = ess.getUser(sender.getPlayer());
 			user.setRecipeSee(true);
-			final InventoryView view = user.openWorkbench(null, true);
+			final InventoryView view = user.getBase().openWorkbench(null, true);
 			for (int i = 0; i < ingredients.size(); i++)
 			{
 				view.setItem(i + 1, ingredients.get(i));
@@ -168,7 +167,7 @@ public class Commandrecipe extends EssentialsCommand
 				}
 				s.append(" ");
 			}
-			sender.sendMessage(_("recipeShapeless", s.toString()));
+			sender.sendMessage(tl("recipeShapeless", s.toString()));
 		}
 	}
 
@@ -176,7 +175,7 @@ public class Commandrecipe extends EssentialsCommand
 	{
 		if (stack == null)
 		{
-			return _("recipeNothing");
+			return tl("recipeNothing");
 		}
 		return getMaterialName(stack.getType());
 	}
@@ -185,7 +184,7 @@ public class Commandrecipe extends EssentialsCommand
 	{
 		if (type == null)
 		{
-			return _("recipeNothing");
+			return tl("recipeNothing");
 		}
 		return type.toString().replace("_", " ").toLowerCase(Locale.ENGLISH);
 	}

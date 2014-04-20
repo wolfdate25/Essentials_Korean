@@ -1,10 +1,10 @@
 package com.earth2me.essentials.signs;
 
 import com.earth2me.essentials.ChargeException;
-import static com.earth2me.essentials.I18n._;
-import net.ess3.api.IEssentials;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.Trade;
 import com.earth2me.essentials.User;
+import net.ess3.api.IEssentials;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 
@@ -24,7 +24,7 @@ public class SignWarp extends EssentialsSign
 		if (warpName.isEmpty())
 		{
 			sign.setLine(1, "§c<Warp name>");
-			throw new SignException(_("invalidSignLine", 1));
+			throw new SignException(tl("invalidSignLine", 1));
 		}
 		else
 		{

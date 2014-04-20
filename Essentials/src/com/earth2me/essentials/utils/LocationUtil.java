@@ -1,12 +1,15 @@
 package com.earth2me.essentials.utils;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.Essentials;
+import static com.earth2me.essentials.I18n.tl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.ess3.api.IUser;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -20,7 +23,7 @@ public class LocationUtil
 	// The player can stand inside these materials
 	public static final Set<Integer> HOLLOW_MATERIALS = new HashSet<Integer>();
 	private static final HashSet<Byte> TRANSPARENT_MATERIALS = new HashSet<Byte>();
-	
+
 	static
 	{
 		HOLLOW_MATERIALS.add(Material.AIR.getId());
@@ -58,7 +61,15 @@ public class LocationUtil
 		HOLLOW_MATERIALS.add(Material.FENCE_GATE.getId());
 		HOLLOW_MATERIALS.add(Material.WATER_LILY.getId());
 		HOLLOW_MATERIALS.add(Material.NETHER_WARTS.getId());
-		HOLLOW_MATERIALS.add(Material.CARPET.getId());
+
+		try // 1.6 update
+		{
+			HOLLOW_MATERIALS.add(Material.CARPET.getId());
+		}
+		catch (java.lang.NoSuchFieldError e)
+		{
+			Essentials.wrongVersion();
+		}
 
 		for (Integer integer : HOLLOW_MATERIALS)
 		{
@@ -67,9 +78,8 @@ public class LocationUtil
 		TRANSPARENT_MATERIALS.add((byte)Material.WATER.getId());
 		TRANSPARENT_MATERIALS.add((byte)Material.STATIONARY_WATER.getId());
 	}
-	
-	public final static int RADIUS = 3;
-	public final static Vector3D[] VOLUME;
+	public static final int RADIUS = 3;
+	public static final Vector3D[] VOLUME;
 
 	public static ItemStack convertBlockToItem(final Block block)
 	{
@@ -153,17 +163,19 @@ public class LocationUtil
 		return is;
 	}
 
+
 	public static class Vector3D
 	{
+		public int x;
+		public int y;
+		public int z;
+
 		public Vector3D(int x, int y, int z)
 		{
 			this.x = x;
 			this.y = y;
 			this.z = z;
 		}
-		public int x;
-		public int y;
-		public int z;
 	}
 
 	static
@@ -190,7 +202,6 @@ public class LocationUtil
 		});
 		VOLUME = pos.toArray(new Vector3D[0]);
 	}
-	
 
 	public static Location getTarget(final LivingEntity entity) throws Exception
 	{
@@ -204,6 +215,10 @@ public class LocationUtil
 
 	static boolean isBlockAboveAir(final World world, final int x, final int y, final int z)
 	{
+		if (y > world.getMaxHeight())
+		{
+			return true;
+		}
 		return HOLLOW_MATERIALS.contains(world.getBlockAt(x, y - 1, z).getType().getId());
 	}
 
@@ -238,11 +253,36 @@ public class LocationUtil
 		return false;
 	}
 
+	// Not needed if using getSafeDestination(loc)
+	public static Location getRoundedDestination(final Location loc)
+	{
+		final World world = loc.getWorld();
+		int x = loc.getBlockX();
+		int y = (int)Math.round(loc.getY());
+		int z = loc.getBlockZ();
+		return new Location(world, x + 0.5, y, z + 0.5, loc.getYaw(), loc.getPitch());
+	}
+
+	public static Location getSafeDestination(final IUser user, final Location loc) throws Exception
+	{
+		if (loc.getWorld().equals(user.getBase().getWorld())
+			&& ((user.getBase().getGameMode() == GameMode.CREATIVE
+				|| user.isGodModeEnabled()) && user.getBase().getAllowFlight()))
+		{
+			if (shouldFly(loc))
+			{
+				user.getBase().setFlying(true);
+			}
+			return getRoundedDestination(loc);
+		}
+		return getSafeDestination(loc);
+	}
+
 	public static Location getSafeDestination(final Location loc) throws Exception
 	{
 		if (loc == null || loc.getWorld() == null)
 		{
-			throw new Exception(_("destinationNotSet"));
+			throw new Exception(tl("destinationNotSet"));
 		}
 		final World world = loc.getWorld();
 		int x = loc.getBlockX();
@@ -298,10 +338,30 @@ public class LocationUtil
 				y = world.getHighestBlockYAt(x, z);
 				if (x - 48 > loc.getBlockX())
 				{
-					throw new Exception(_("holeInFloor"));
+					throw new Exception(tl("holeInFloor"));
 				}
 			}
 		}
 		return new Location(world, x + 0.5, y, z + 0.5, loc.getYaw(), loc.getPitch());
-	}	
+	}
+
+	public static boolean shouldFly(Location loc)
+	{
+		final World world = loc.getWorld();
+		final int x = loc.getBlockX();
+		int y = (int)Math.round(loc.getY());
+		final int z = loc.getBlockZ();
+		int count = 0;
+		while (LocationUtil.isBlockUnsafe(world, x, y, z) && y > -1)
+		{
+			y--;
+			count++;
+			if (count > 2)
+			{
+				return true;
+			}
+		}
+
+		return y < 0 ? true : false;
+	}
 }

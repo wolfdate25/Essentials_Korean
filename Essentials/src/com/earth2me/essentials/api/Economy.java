@@ -1,26 +1,30 @@
 package com.earth2me.essentials.api;
 
-import static net.ess3.api.Economy.add;
-import static net.ess3.api.Economy.divide;
-import static net.ess3.api.Economy.format;
-import static net.ess3.api.Economy.getMoneyExact;
-import static net.ess3.api.Economy.hasEnough;
-import static net.ess3.api.Economy.hasLess;
-import static net.ess3.api.Economy.hasMore;
-import static net.ess3.api.Economy.multiply;
-import static net.ess3.api.Economy.setMoney;
-import static net.ess3.api.Economy.substract;
-import net.ess3.api.IEssentials;
 import com.earth2me.essentials.EssentialsConf;
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.EssentialsUserConf;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
-import com.earth2me.essentials.utils.StringUtil;
+import static com.earth2me.essentials.api.Economy.add;
+import static com.earth2me.essentials.api.Economy.divide;
+import static com.earth2me.essentials.api.Economy.format;
+import static com.earth2me.essentials.api.Economy.getMoneyExact;
+import static com.earth2me.essentials.api.Economy.hasEnough;
+import static com.earth2me.essentials.api.Economy.hasLess;
+import static com.earth2me.essentials.api.Economy.hasMore;
+import static com.earth2me.essentials.api.Economy.multiply;
+import static com.earth2me.essentials.api.Economy.setMoney;
+import static com.earth2me.essentials.api.Economy.substract;
 import com.earth2me.essentials.utils.NumberUtil;
+import com.earth2me.essentials.utils.StringUtil;
+import com.google.common.base.Charsets;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.IEssentials;
+import net.ess3.api.MaxMoneyException;
 
 
 /**
@@ -31,7 +35,7 @@ public class Economy
 	public Economy()
 	{
 	}
-	private static final Logger logger = Logger.getLogger("Minecraft");
+	private static final Logger logger = Logger.getLogger("Essentials");
 	private static IEssentials ess;
 	private static final String noCallBeforeLoad = "Essentials API is called before Essentials is loaded.";
 	public static final MathContext MATH_CONTEXT = MathContext.DECIMAL128;
@@ -51,31 +55,20 @@ public class Economy
 		{
 			folder.mkdirs();
 		}
-		EssentialsConf npcConfig = new EssentialsConf(new File(folder, StringUtil.sanitizeFileName(name) + ".yml"));
+		UUID npcUUID = UUID.nameUUIDFromBytes(("NPC:" + name).getBytes(Charsets.UTF_8));
+		EssentialsUserConf npcConfig = new EssentialsUserConf(name, npcUUID, new File(folder, npcUUID.toString() + ".yml"));
 		npcConfig.load();
 		npcConfig.setProperty("npc", true);
+		npcConfig.setProperty("lastAccountName", name);
 		npcConfig.setProperty("money", ess.getSettings().getStartingBalance());
 		npcConfig.forceSave();
+		ess.getUserMap().trackUUID(npcUUID, name);
 	}
 
 	private static void deleteNPC(String name)
 	{
-		File folder = new File(ess.getDataFolder(), "userdata");
-		if (!folder.exists())
-		{
-			folder.mkdirs();
-		}
-		File config = new File(folder, StringUtil.sanitizeFileName(name) + ".yml");
-		EssentialsConf npcConfig = new EssentialsConf(config);
-		npcConfig.load();
-		if (npcConfig.hasProperty("npc") && npcConfig.getBoolean("npc", false))
-		{
-			if (!config.delete())
-			{
-				logger.log(Level.WARNING, _("deleteFileError", config));
-			}
-			ess.getUserMap().removeUser(name);
-		}
+		User user = ess.getUser(name);
+		user.reset();
 	}
 
 	private static User getUserByName(String name)
@@ -146,7 +139,14 @@ public class Economy
 		{
 			throw new NoLoanPermittedException();
 		}
-		user.setMoney(balance);
+		try
+		{
+			user.setMoney(balance);
+		}
+		catch (MaxMoneyException ex)
+		{
+			//TODO: Update API to show max balance errors
+		}
 	}
 
 	/**

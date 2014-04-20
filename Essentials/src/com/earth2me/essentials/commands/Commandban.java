@@ -1,14 +1,13 @@
 package com.earth2me.essentials.commands;
 
+import com.earth2me.essentials.CommandSource;
 import com.earth2me.essentials.Console;
-import static com.earth2me.essentials.I18n._;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.OfflinePlayer;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.FormatUtil;
 import java.util.logging.Level;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 
 public class Commandban extends EssentialsCommand
@@ -19,7 +18,7 @@ public class Commandban extends EssentialsCommand
 	}
 
 	@Override
-	public void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	public void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		boolean nomatch = false;
 		if (args.length < 1)
@@ -31,28 +30,27 @@ public class Commandban extends EssentialsCommand
 		{
 			user = getPlayer(server, args, 0, true, true);
 		}
-		catch (NoSuchFieldException e)
+		catch (PlayerNotFoundException e)
 		{
 			nomatch = true;
-			user = ess.getUser(new OfflinePlayer(args[0], ess));
+			user = ess.getUser(new OfflinePlayer(args[0], ess.getServer()));
 		}
-		if (!user.isOnline())
+		if (!user.getBase().isOnline())
 		{
-			if (sender instanceof Player
-				&& !ess.getUser(sender).isAuthorized("essentials.ban.offline"))
+			if (sender.isPlayer() && !ess.getUser(sender.getPlayer()).isAuthorized("essentials.ban.offline"))
 			{
-				throw new Exception(_("banExempt"));
+				throw new Exception(tl("banExemptOffline"));
 			}
 		}
 		else
 		{
-			if (user.isAuthorized("essentials.ban.exempt") && sender instanceof Player)
+			if (user.isAuthorized("essentials.ban.exempt") && sender.isPlayer())
 			{
-				throw new Exception(_("banExempt"));
+				throw new Exception(tl("banExempt"));
 			}
 		}
 
-		final String senderName = sender instanceof Player ? ((Player)sender).getDisplayName() : Console.NAME;
+		final String senderName = sender.isPlayer() ? sender.getPlayer().getDisplayName() : Console.NAME;
 		String banReason;
 		if (args.length > 1)
 		{
@@ -60,21 +58,21 @@ public class Commandban extends EssentialsCommand
 		}
 		else
 		{
-			banReason = _("defaultBanReason");
+			banReason = tl("defaultBanReason");
 		}
 
-		user.setBanReason(_("banFormat", banReason, senderName));
-		user.setBanned(true);
+		user.setBanReason(tl("banFormat", banReason, senderName));
+		user.getBase().setBanned(true);
 		user.setBanTimeout(0);
-		user.kickPlayer(_("banFormat", banReason, senderName));
+		user.getBase().kickPlayer(tl("banFormat", banReason, senderName));
 
-		server.getLogger().log(Level.INFO, _("playerBanned", senderName, user.getName(), banReason));
+		server.getLogger().log(Level.INFO, tl("playerBanned", senderName, user.getName(), banReason));
 
 		if (nomatch)
 		{
-			sender.sendMessage(_("userUnknown", user.getName()));
+			sender.sendMessage(tl("userUnknown", user.getName()));
 		}
 
-		ess.broadcastMessage("essentials.ban.notify", _("playerBanned", senderName, user.getName(), banReason));
+		ess.broadcastMessage("essentials.ban.notify", tl("playerBanned", senderName, user.getName(), banReason));
 	}
 }

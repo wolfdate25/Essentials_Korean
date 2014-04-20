@@ -1,10 +1,11 @@
 package com.earth2me.essentials.signs;
 
-import net.ess3.api.IEssentials;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.utils.FormatUtil;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.ess3.api.IEssentials;
+import net.ess3.api.MaxMoneyException;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -17,10 +18,10 @@ import org.bukkit.event.block.*;
 
 public class SignBlockListener implements Listener
 {
+	private static final Logger LOGGER = Logger.getLogger("Essentials");
+	private static final Material WALL_SIGN = Material.WALL_SIGN;
+	private static final Material SIGN_POST = Material.SIGN_POST;
 	private final transient IEssentials ess;
-	private final static Logger LOGGER = Logger.getLogger("Minecraft");
-	private final static int WALL_SIGN = Material.WALL_SIGN.getId();
-	private final static int SIGN_POST = Material.SIGN_POST.getId();
 
 	public SignBlockListener(IEssentials ess)
 	{
@@ -35,14 +36,20 @@ public class SignBlockListener implements Listener
 			event.getHandlers().unregister(this);
 			return;
 		}
-
-		if (protectSignsAndBlocks(event.getBlock(), event.getPlayer()))
+		try
+		{
+			if (protectSignsAndBlocks(event.getBlock(), event.getPlayer()))
+			{
+				event.setCancelled(true);
+			}
+		}
+		catch (MaxMoneyException ex)
 		{
 			event.setCancelled(true);
 		}
 	}
 
-	public boolean protectSignsAndBlocks(final Block block, final Player player)
+	public boolean protectSignsAndBlocks(final Block block, final Player player) throws MaxMoneyException
 	{
 		// prevent any signs be broken by destroying the block they are attached to
 		if (EssentialsSign.checkIfBlockBreaksSigns(block))
@@ -51,7 +58,7 @@ public class SignBlockListener implements Listener
 			return true;
 		}
 
-		final int mat = block.getTypeId();
+		final Material mat = block.getType();
 		if (mat == SIGN_POST || mat == WALL_SIGN)
 		{
 			final Sign csign = (Sign)block.getState();
@@ -94,6 +101,7 @@ public class SignBlockListener implements Listener
 		}
 
 		final String topLine = event.getLine(0);
+		//We loop through all sign types here to prevent clashes with preexisting signs later
 		for (Signs signs : Signs.values())
 		{
 			final EssentialsSign sign = signs.getSign();
@@ -139,16 +147,16 @@ public class SignBlockListener implements Listener
 		}
 
 		final Block against = event.getBlockAgainst();
-		if ((against.getTypeId() == WALL_SIGN
-			 || against.getTypeId() == SIGN_POST)
+		if ((against.getType() == WALL_SIGN
+			 || against.getType() == SIGN_POST)
 			&& EssentialsSign.isValidSign(new EssentialsSign.BlockSign(against)))
 		{
 			event.setCancelled(true);
 			return;
 		}
 		final Block block = event.getBlock();
-		if (block.getTypeId() == WALL_SIGN
-			|| block.getTypeId() == SIGN_POST)
+		if (block.getType() == WALL_SIGN
+			|| block.getType() == SIGN_POST)
 		{
 			return;
 		}
@@ -173,8 +181,8 @@ public class SignBlockListener implements Listener
 		}
 
 		final Block block = event.getBlock();
-		if (((block.getTypeId() == WALL_SIGN
-			  || block.getTypeId() == SIGN_POST)
+		if (((block.getType() == WALL_SIGN
+			  || block.getType() == SIGN_POST)
 			 && EssentialsSign.isValidSign(new EssentialsSign.BlockSign(block)))
 			|| EssentialsSign.checkIfBlockBreaksSigns(block))
 		{
@@ -202,8 +210,8 @@ public class SignBlockListener implements Listener
 		}
 
 		final Block block = event.getBlock();
-		if (((block.getTypeId() == WALL_SIGN
-			  || block.getTypeId() == SIGN_POST)
+		if (((block.getType() == WALL_SIGN
+			  || block.getType() == SIGN_POST)
 			 && EssentialsSign.isValidSign(new EssentialsSign.BlockSign(block)))
 			|| EssentialsSign.checkIfBlockBreaksSigns(block))
 		{
@@ -232,8 +240,8 @@ public class SignBlockListener implements Listener
 
 		for (Block block : event.getBlocks())
 		{
-			if (((block.getTypeId() == WALL_SIGN
-				  || block.getTypeId() == SIGN_POST)
+			if (((block.getType() == WALL_SIGN
+				  || block.getType() == SIGN_POST)
 				 && EssentialsSign.isValidSign(new EssentialsSign.BlockSign(block)))
 				|| EssentialsSign.checkIfBlockBreaksSigns(block))
 			{
@@ -264,8 +272,8 @@ public class SignBlockListener implements Listener
 		if (event.isSticky())
 		{
 			final Block block = event.getBlock();
-			if (((block.getTypeId() == WALL_SIGN
-				  || block.getTypeId() == SIGN_POST)
+			if (((block.getType() == WALL_SIGN
+				  || block.getType() == SIGN_POST)
 				 && EssentialsSign.isValidSign(new EssentialsSign.BlockSign(block)))
 				|| EssentialsSign.checkIfBlockBreaksSigns(block))
 			{

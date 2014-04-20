@@ -1,9 +1,10 @@
 package com.earth2me.essentials.commands;
 
-import static com.earth2me.essentials.I18n._;
+import com.earth2me.essentials.CommandSource;
+import static com.earth2me.essentials.I18n.tl;
 import com.earth2me.essentials.User;
+import net.ess3.api.events.GodStatusChangeEvent;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 
 
 public class Commandgod extends EssentialsToggleCommand
@@ -14,7 +15,7 @@ public class Commandgod extends EssentialsToggleCommand
 	}
 
 	@Override
-	protected void run(final Server server, final CommandSender sender, final String commandLabel, final String[] args) throws Exception
+	protected void run(final Server server, final CommandSource sender, final String commandLabel, final String[] args) throws Exception
 	{
 		toggleOtherPlayers(server, sender, args);
 	}
@@ -27,43 +28,49 @@ public class Commandgod extends EssentialsToggleCommand
 			Boolean toggle = matchToggleArgument(args[0]);
 			if (toggle == null && user.isAuthorized(othersPermission))
 			{
-				toggleOtherPlayers(server, user.getBase(), args);
+				toggleOtherPlayers(server, user.getSource(), args);
 			}
 			else
 			{
-				togglePlayer(user.getBase(), user, toggle);
+				togglePlayer(user.getSource(), user, toggle);
 			}
 		}
 		else if (args.length == 2 && user.isAuthorized(othersPermission))
-		{			
-			toggleOtherPlayers(server, user.getBase(), args);
+		{
+			toggleOtherPlayers(server, user.getSource(), args);
 		}
 		else
 		{
-			togglePlayer(user.getBase(), user, null);
+			togglePlayer(user.getSource(), user, null);
 		}
 	}
 
 	@Override
-	void togglePlayer(CommandSender sender, User user, Boolean enabled)
+	void togglePlayer(CommandSource sender, User user, Boolean enabled)
 	{
 		if (enabled == null)
 		{
 			enabled = !user.isGodModeEnabled();
 		}
-		
-		user.setGodModeEnabled(enabled);
 
-		if (enabled && user.getHealth() != 0)
+		final User controller = sender.isPlayer() ? ess.getUser(sender.getPlayer()) : null;
+		final GodStatusChangeEvent godEvent = new GodStatusChangeEvent(controller, user, enabled);
+		ess.getServer().getPluginManager().callEvent(godEvent);
+		if (!godEvent.isCancelled())
 		{
-			user.setHealth(user.getMaxHealth());
-			user.setFoodLevel(20);
-		}
+			user.setGodModeEnabled(enabled);
 
-		user.sendMessage(_("godMode", enabled ? _("enabled") : _("disabled")));
-		if (!sender.equals(user.getBase()))
-		{
-			sender.sendMessage(_("godMode", _(enabled ? "godEnabledFor" : "godDisabledFor", user.getDisplayName())));
+			if (enabled && user.getBase().getHealth() != 0)
+			{
+				user.getBase().setHealth(user.getBase().getMaxHealth());
+				user.getBase().setFoodLevel(20);
+			}
+
+			user.sendMessage(tl("godMode", enabled ? tl("enabled") : tl("disabled")));
+			if (!sender.isPlayer() || !sender.getPlayer().equals(user.getBase()))
+			{
+				sender.sendMessage(tl("godMode", tl(enabled ? "godEnabledFor" : "godDisabledFor", user.getDisplayName())));
+			}
 		}
 	}
 }

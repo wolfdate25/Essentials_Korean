@@ -1,13 +1,16 @@
 package com.earth2me.essentials;
 
-import net.ess3.api.IEssentials;
 import com.avaje.ebean.config.ServerConfig;
+import com.earth2me.essentials.OfflinePlayer;
 import com.earth2me.essentials.craftbukkit.FakeWorld;
+
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
+import net.ess3.api.IEssentials;
 import org.bukkit.*;
 import org.bukkit.Warning.WarningState;
 import org.bukkit.World.Environment;
@@ -17,21 +20,31 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.help.HelpMap;
 import org.bukkit.inventory.*;
 import org.bukkit.map.MapView;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.plugin.EventExecutor;
+import org.bukkit.plugin.InvalidDescriptionException;
+import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicesManager;
+import org.bukkit.plugin.UnknownDependencyException;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scheduler.BukkitWorker;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.util.CachedServerIcon;
 
 
 public class FakeServer implements Server
@@ -129,7 +142,7 @@ public class FakeServer implements Server
 	{
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
-	
+
 	@Override
 	public Player getPlayer(String string)
 	{
@@ -160,7 +173,182 @@ public class FakeServer implements Server
 	@Override
 	public PluginManager getPluginManager()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return new PluginManager()
+		{
+			@Override
+			public void registerInterface(Class<? extends PluginLoader> loader) throws IllegalArgumentException
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Plugin getPlugin(String name)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Plugin[] getPlugins()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public boolean isPluginEnabled(String name)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public boolean isPluginEnabled(Plugin plugin)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Plugin loadPlugin(File file) throws InvalidPluginException, InvalidDescriptionException, UnknownDependencyException
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Plugin[] loadPlugins(File directory)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void disablePlugins()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void clearPlugins()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void callEvent(Event event) throws IllegalStateException
+			{
+				Logger.getLogger("Minecraft").info("Called event " + event.getEventName());
+			}
+
+			@Override
+			public void registerEvents(Listener listener, Plugin plugin)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void registerEvent(Class<? extends Event> event, Listener listener, EventPriority priority, EventExecutor executor, Plugin plugin)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void registerEvent(Class<? extends Event> event, Listener listener, EventPriority priority, EventExecutor executor, Plugin plugin, boolean ignoreCancelled)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void enablePlugin(Plugin plugin)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void disablePlugin(Plugin plugin)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Permission getPermission(String name)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void addPermission(Permission perm)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void removePermission(Permission perm)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void removePermission(String name)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Set<Permission> getDefaultPermissions(boolean op)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void recalculatePermissionDefaults(Permission perm)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void subscribeToPermission(String permission, Permissible permissible)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void unsubscribeFromPermission(String permission, Permissible permissible)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Set<Permissible> getPermissionSubscriptions(String permission)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void subscribeToDefaultPerms(boolean op, Permissible permissible)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public void unsubscribeFromDefaultPerms(boolean op, Permissible permissible)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Set<Permissible> getDefaultPermSubscriptions(boolean op)
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public Set<Permission> getPermissions()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+
+			@Override
+			public boolean useTimings()
+			{
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+		};
 	}
 
 	@Override
@@ -249,7 +437,7 @@ public class FakeServer implements Server
 			@Override
 			public BukkitTask runTaskAsynchronously(Plugin plugin, Runnable r) throws IllegalArgumentException
 			{
-				r.run();	  	
+				r.run();
 				return null;
 			}
 
@@ -262,7 +450,7 @@ public class FakeServer implements Server
 			@Override
 			public BukkitTask runTaskLaterAsynchronously(Plugin plugin, Runnable r, long l) throws IllegalArgumentException
 			{
-				r.run();	  	
+				r.run();
 				return null;
 			}
 
@@ -376,9 +564,9 @@ public class FakeServer implements Server
 		players.add(base1);
 	}
 
-	public OfflinePlayer createPlayer(String name, IEssentials ess)
+	public OfflinePlayer createPlayer(String name)
 	{
-		OfflinePlayer player = new OfflinePlayer(name, ess);
+		OfflinePlayer player = new OfflinePlayer(name, this);
 		player.setLocation(new Location(worlds.get(0), 0, 0, 0, 0, 0));
 		return player;
 	}
@@ -511,6 +699,11 @@ public class FakeServer implements Server
 	@Override
 	public org.bukkit.OfflinePlayer getOfflinePlayer(final String string)
 	{
+		return createOPlayer(string);
+	}
+
+	private org.bukkit.OfflinePlayer createOPlayer(final String string)
+	{
 		return new org.bukkit.OfflinePlayer()
 		{
 			@Override
@@ -596,6 +789,20 @@ public class FakeServer implements Server
 			{
 				throw new UnsupportedOperationException("Not supported yet.");
 			}
+
+			@Override
+			public UUID getUniqueId()
+			{
+				if (string == "testPlayer1")
+				{
+					return UUID.fromString("3c9ebe1a-9098-43fd-bc0c-a369b76817ba");
+				}
+				else if (string == "npc1")
+				{
+					return null;
+				}
+				throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+			}
 		};
 	}
 
@@ -638,8 +845,8 @@ public class FakeServer implements Server
 	@Override
 	public ConsoleCommandSender getConsoleSender()
 	{
-		return new ConsoleCommandSender() {
-
+		return new ConsoleCommandSender()
+		{
 			@Override
 			public void sendMessage(String message)
 			{
@@ -649,7 +856,8 @@ public class FakeServer implements Server
 			@Override
 			public void sendMessage(String[] messages)
 			{
-				for (String message : messages) {
+				for (String message : messages)
+				{
 					System.out.println("Console message: " + message);
 				}
 			}
@@ -779,7 +987,7 @@ public class FakeServer implements Server
 			{
 				throw new UnsupportedOperationException("Not supported yet.");
 			}
-		};		
+		};
 	}
 
 	@Override
@@ -947,7 +1155,7 @@ public class FakeServer implements Server
 	@Override
 	public WarningState getWarningState()
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		return WarningState.DEFAULT;
 	}
 
 	@Override
@@ -971,6 +1179,75 @@ public class FakeServer implements Server
 	@Override
 	public ScoreboardManager getScoreboardManager()
 	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public CachedServerIcon getServerIcon()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public CachedServerIcon loadServerIcon(File file) throws IllegalArgumentException, Exception
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public CachedServerIcon loadServerIcon(BufferedImage bufferedImage) throws IllegalArgumentException, Exception
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public void setIdleTimeout(int i)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public int getIdleTimeout()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public UnsafeValues getUnsafe()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public BanList getBanList(BanList.Type arg0)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public Player getPlayer(UUID arg0)
+	{
+		for (Player player : players)
+		{
+			if (player.getUniqueId().equals(arg0))
+			{
+				return player;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public org.bukkit.OfflinePlayer getOfflinePlayer(UUID arg0)
+	{
+		if (arg0.toString().equalsIgnoreCase("3c9ebe1a-9098-43fd-bc0c-a369b76817ba"))
+		{
+			return createOPlayer("testPlayer1");
+		}
+		if (arg0.toString().equalsIgnoreCase("f4a37409-5c40-3b2c-9cd6-57d3c5abdc76"))
+		{
+			return createOPlayer("npc1");
+		}
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 }

@@ -1,12 +1,12 @@
 package com.earth2me.essentials.commands;
 
-import net.ess3.api.IUser;
-import com.earth2me.essentials.utils.StringUtil;
-import static com.earth2me.essentials.I18n._;
 import com.earth2me.essentials.*;
+import static com.earth2me.essentials.I18n.tl;
+import com.earth2me.essentials.utils.StringUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import net.ess3.api.IUser;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.inventory.ItemStack;
@@ -41,17 +41,17 @@ public class Commandrepair extends EssentialsCommand
 
 	public void repairHand(User user) throws Exception
 	{
-		final ItemStack item = user.getItemInHand();
+		final ItemStack item = user.getBase().getItemInHand();
 		if (item == null || item.getType().isBlock() || item.getDurability() == 0)
 		{
-			throw new Exception(_("repairInvalidType"));
+			throw new Exception(tl("repairInvalidType"));
 		}
 
 		if (!item.getEnchantments().isEmpty()
 			&& !ess.getSettings().getRepairEnchanted()
 			&& !user.isAuthorized("essentials.repair.enchanted"))
 		{
-			throw new Exception(_("repairEnchanted"));
+			throw new Exception(tl("repairEnchanted"));
 		}
 
 		final String itemName = item.getType().toString().toLowerCase(Locale.ENGLISH);
@@ -62,28 +62,28 @@ public class Commandrepair extends EssentialsCommand
 		repairItem(item);
 
 		charge.charge(user);
-		user.updateInventory();
-		user.sendMessage(_("repair", itemName.replace('_', ' ')));
+		user.getBase().updateInventory();
+		user.sendMessage(tl("repair", itemName.replace('_', ' ')));
 	}
 
 	public void repairAll(User user) throws Exception
 	{
 		final List<String> repaired = new ArrayList<String>();
-		repairItems(user.getInventory().getContents(), user, repaired);
+		repairItems(user.getBase().getInventory().getContents(), user, repaired);
 
 		if (user.isAuthorized("essentials.repair.armor"))
 		{
-			repairItems(user.getInventory().getArmorContents(), user, repaired);
+			repairItems(user.getBase().getInventory().getArmorContents(), user, repaired);
 		}
 		
-		user.updateInventory();
+		user.getBase().updateInventory();
 		if (repaired.isEmpty())
 		{
-			throw new Exception(_("repairNone"));
+			throw new Exception(tl("repairNone"));
 		}
 		else
 		{
-			user.sendMessage(_("repair", StringUtil.joinList(repaired)));
+			user.sendMessage(tl("repair", StringUtil.joinList(repaired)));
 		}
 	}
 
@@ -92,12 +92,12 @@ public class Commandrepair extends EssentialsCommand
 		final Material material = Material.getMaterial(item.getTypeId());
 		if (material.isBlock() || material.getMaxDurability() < 1)
 		{
-			throw new Exception(_("repairInvalidType"));
+			throw new Exception(tl("repairInvalidType"));
 		}
 
 		if (item.getDurability() == 0)
 		{
-			throw new Exception(_("repairAlreadyFixed"));
+			throw new Exception(tl("repairAlreadyFixed"));
 		}
 
 		item.setDurability((short)0);
